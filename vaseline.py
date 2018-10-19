@@ -1,5 +1,7 @@
 import csv
 import sys
+from fpdf import FPDF
+import datetime
 
 file = sys.argv[1]
 f = open(file)
@@ -103,21 +105,57 @@ for i, val in enumerate(csv_file):
     else:
       order_qty[sku] = qty
 
+f.close()
+
+now = datetime.datetime.now()
+title = "pick-list date: " + now.strftime("%Y-%m-%d %H:%M:%S")
+file_name = "swicklist-" + now.strftime("%Y-%m-%d %H%M%S")
+
+pdf = FPDF()
+pdf.add_page()
+pdf.set_font('Times', '', 12)
+pdf.cell(40, 10, title, 0, 1)
 
 # Summary output here 
-print "Orders:"
+x = pdf.get_x()
+y = pdf.get_y()
+
+pdf.cell(40, 5, 'Regular', 1, 1)
+regular_str = ""
 for key, sku in enumerate(order_qty):
-  print "\t" + sku + ": " + str(order_qty[sku])
+  regular_str += sku + ": " + str(order_qty[sku]) + "\n"
 
-print "Mini orders:"
+pdf.multi_cell(40, 5, regular_str, 1, 0)
+
+pdf.set_y(y)
+pdf.set_x(x + 40)
+
+pdf.cell(40, 5, 'Mini', 1, 1)
+mini_str = ""
 for key, sku in enumerate(mini_qty):
-  print "\t" + sku + ": " + str(mini_qty[sku])
+  mini_str += sku + ": " + str(mini_qty[sku]) + "\n"
 
-print "Non links:"
+pdf.set_x(x + 40)
+pdf.multi_cell(40, 5, mini_str, 1, 0)
+
+pdf.set_y(y)
+pdf.set_x(x + 80)
+
+pdf.cell(40, 5, 'Non-link', 1, 1)
+nonlink_str = ""
 for key, sku in enumerate(non_link_qty):
-  print "\t" + sku + ": " + str(non_link_qty[sku])
+  nonlink_str += sku + ": " + str(non_link_qty[sku]) + "\n"
 
-print "West cost orders: " +  str(len(west_coast_addresses))
-print "2 day orders: " +  str(len(two_day_addresses))
-print "Ice total: " + str(ice_total)
-f.close()
+pdf.set_x(x + 80)
+pdf.multi_cell(40, 5, nonlink_str, 1, 0)
+
+pdf.set_x(x + 80)
+pdf.cell(40, 5, "West cost orders: " +  str(len(west_coast_addresses)), 0, 1)
+
+pdf.set_x(x + 80)
+pdf.cell(40, 5, "2 day orders: " +  str(len(two_day_addresses)), 0, 1)
+
+pdf.set_x(x + 80)
+pdf.cell(40, 5, "Ice total: " + str(ice_total), 0, 1)
+
+pdf.output(file_name, 'F')
