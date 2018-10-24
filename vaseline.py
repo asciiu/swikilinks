@@ -107,6 +107,8 @@ for i, val in enumerate(csv_file):
 
 f.close()
 
+# Summary Pick list to pid file here 
+####################################
 now = datetime.datetime.now()
 title = "pick-list date: " + now.strftime("%Y-%m-%d %H:%M:%S")
 file_name = "swicklist-" + now.strftime("%Y-%m-%d %H%M%S")
@@ -116,39 +118,59 @@ pdf.add_page()
 pdf.set_font('Times', '', 12)
 pdf.cell(40, 10, title, 0, 1)
 
-# Summary output here 
 x = pdf.get_x()
 y = pdf.get_y()
 
+# Sort the dictionary of skus in order_qty
+sorted_skus = sorted(order_qty)
+# create pdf cell
 pdf.cell(40, 5, 'Regular', 1, 1)
 regular_str = ""
-for key, sku in enumerate(order_qty):
+# for each sku in the sorted list of skus
+for sku in sorted_skus:
   regular_str += sku + ": " + str(order_qty[sku]) + "\n"
 
+# print the cell for regular orders
 pdf.multi_cell(40, 5, regular_str, 1, 0)
 
+
+############################################
+# Mini
+############################################
 pdf.set_y(y)
 pdf.set_x(x + 40)
 
+sorted_mini_skus = sorted(mini_qty)
+
 pdf.cell(40, 5, 'Mini', 1, 1)
 mini_str = ""
-for key, sku in enumerate(mini_qty):
+for sku in sorted_mini_skus:
   mini_str += sku + ": " + str(mini_qty[sku]) + "\n"
 
 pdf.set_x(x + 40)
 pdf.multi_cell(40, 5, mini_str, 1, 0)
 
+
+############################################
+# Non link
+############################################
 pdf.set_y(y)
 pdf.set_x(x + 80)
 
+sorted_non_link = sorted(non_link_qty)
+
 pdf.cell(40, 5, 'Non-link', 1, 1)
 nonlink_str = ""
-for key, sku in enumerate(non_link_qty):
+for sku in sorted_non_link:
   nonlink_str += sku + ": " + str(non_link_qty[sku]) + "\n"
 
 pdf.set_x(x + 80)
 pdf.multi_cell(40, 5, nonlink_str, 1, 0)
 
+
+############################################
+# Summary
+############################################
 pdf.set_x(x + 80)
 pdf.cell(40, 5, "West cost orders: " +  str(len(west_coast_addresses)), 0, 1)
 
