@@ -183,7 +183,7 @@ f.close()
 now = datetime.datetime.now()
 title = "pick-list date: " + now.strftime("%Y-%m-%d %H:%M:%S")
 subtitle = "orders: " + str(order_num_min) + " - " + str(order_num_max)
-file_name = "swicklist-" + now.strftime("%Y-%m-%d %H%M%S")
+file_name = "swiklist-" + now.strftime("%Y-%m-%d %H%M%S")
 
 pdf = FPDF(format = "Letter")
 pdf.add_page()
@@ -289,4 +289,4 @@ for _, label in enumerate(labels):
       y = 0
       pdf.add_page()
 
-pdf.output(file_name, 'F')
+pdf.output("../../../"+file_name, 'F')
