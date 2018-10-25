@@ -3,6 +3,7 @@ import sys
 from fpdf import FPDF
 import datetime
 from products import ParseProductsFile
+from avery import Avery5160
 
 file = sys.argv[1]
 f = open(file)
@@ -20,10 +21,14 @@ custom_index = 0
 addres_index = 0
 order_index = 0
 name_index = 0
-
+order_num_index = 0
+order_num_min = 0
+order_num_max = 0
 order_qty = {}
 mini_qty = {}
 non_link_qty = {}
+labels = []
+sku_product_not_found = []
 
 # this line will parse the products csv file and return 
 # a dictionary with sku -> description
@@ -35,6 +40,8 @@ for i, val in enumerate(csv_file):
   if i == 0:
     # assign indices of columns based upon headers
     for j, header in enumerate(val):
+      if header == "Order - Number":
+        order_number_index = j
       if header == "Item - SKU":
         sku_index = j
       if header == "Item - Qty":
@@ -54,12 +61,19 @@ for i, val in enumerate(csv_file):
     continue
 
   sku = val[sku_index]
+  order_num = val[order_num_index]
   qty = int(val[qty_index])
   options = val[option_index]
   custom = val[custom_index]
   address = val[address_index]
   order_num = val[order_index]
   item_name = val[name_index]
+
+  if order_num_min == 0 or order_num_min > order_num:
+    order_num_min = order_num 
+  
+  if order_num_max == 0 or order_num_max < order_num:
+    order_num_max = order_num
 
   # count unique addresses that are west coast orders
   if address not in west_coast_addresses and "West" in custom:
@@ -85,6 +99,57 @@ for i, val in enumerate(csv_file):
   # those items appear as a unique product.  
   if "1350249218131" in options:
     sku = sku+"+egg"
+
+  # label link orders only
+  if "Mini" in item_name or "Micro" in item_name or "links" in item_name:
+    for i in range(qty):
+      # product description associated with sku 
+      key = sku.replace("+egg", "")
+      if products.has_key(key):
+        desc = "order #: " + order_num + " " + products[key]
+        if "+egg" in sku:
+          desc += " +egg"
+
+        # 40 links = 2 labels with 20 links 
+        if "(40 links)" in desc:
+          desc = desc.replace("(40 links)", "(20/40 links)")
+          labels.append(desc)
+          labels.append(desc)
+
+        # 24 links = 2 labels with 12 links
+        elif "(24 links)" in desc:
+          desc = desc.replace("(24 links)", "(12/24 links)")
+          labels.append(desc)
+          labels.append(desc)
+
+        # 20 links = 2 labels with 10 links
+        elif "(20 links)" in desc:
+          desc = desc.replace("(20 links)", "(10/20 links)")
+          labels.append(desc)
+          labels.append(desc)
+
+        # 10 links = 2 labels with 5 links
+        elif "(10 links)" in desc:
+          desc = desc.replace("(10 links)", "(5/10 links)")
+          labels.append(desc)
+          labels.append(desc)
+
+        # 7 links = 2 labels with 3 links and 4 links 
+        elif "(7 links)" in desc:
+          d1 = desc.replace("(7 links)", "(3/7 links)")
+          labels.append(d1)
+          d2 = desc.replace("(7 links)", "(4/7 links)")
+          labels.append(d2)
+
+        # 6 links = 2 labels with 3 links
+        elif "(6 links)" in desc:
+          desc = desc.replace("(6 links)", "(3/6 links)")
+          labels.append(desc)
+          labels.append(desc)
+        else:
+          labels.append(desc)
+      else: 
+        sku_product_not_found.append(key)
 
   # mini orders have mini or micro in item name
   if "Mini" in item_name or "Micro" in item_name:
@@ -115,16 +180,16 @@ f.close()
 
 # Summary Pick list to pdf file here 
 ####################################
-labels = []
-sku_product_not_found = []
 now = datetime.datetime.now()
 title = "pick-list date: " + now.strftime("%Y-%m-%d %H:%M:%S")
+subtitle = "orders: " + str(order_num_min) + " - " + str(order_num_max)
 file_name = "swicklist-" + now.strftime("%Y-%m-%d %H%M%S")
 
-pdf = FPDF()
+pdf = FPDF(format = "Letter")
 pdf.add_page()
 pdf.set_font('Times', '', 12)
-pdf.cell(40, 10, title, 0, 1)
+pdf.cell(70, 5, title, 0, 0)
+pdf.cell(60, 5, subtitle, 0, 1)
 
 ############################################
 # regular 
@@ -135,121 +200,93 @@ y = pdf.get_y()
 # Sort the dictionary of skus in order_qty
 sorted_skus = sorted(order_qty)
 # create pdf cell
-pdf.cell(40, 5, 'Regular', 1, 1)
+pdf.cell(50, 5, 'Regular', 1, 1)
 regular_str = ""
 # for each sku in the sorted list of skus
 for sku in sorted_skus:
   qty = order_qty[sku]
 
-  for i in range(qty):
-    # product description associated with sku 
-    key = sku.replace("+egg", "")
-    if products.has_key(key):
-      desc = products[key]
-      labels.append(desc)
-    else: 
-      sku_product_not_found.append(key)
-      
-
   # append to string 
   regular_str += sku + ": " + str(qty) + "\n"
 
 # print the cell for regular orders
-pdf.multi_cell(40, 5, regular_str, 1)
+pdf.multi_cell(50, 5, regular_str, 1)
 
 
 ############################################
 # Mini
 ############################################
 pdf.set_y(y)
-pdf.set_x(x + 40)
+pdf.set_x(x + 60)
 
 sorted_mini_skus = sorted(mini_qty)
 
-pdf.cell(40, 5, 'Mini', 1, 1)
+pdf.cell(50, 5, 'Mini', 1, 1)
 mini_str = ""
 for sku in sorted_mini_skus:
   qty = mini_qty[sku]
 
-  for i in range(qty):
-    # product description associated with sku 
-    key = sku.replace("+egg", "")
-    if products.has_key(key):
-      desc = products[key]
-      labels.append(desc)
-    else: 
-      sku_product_not_found.append(key)
-
   mini_str += sku + ": " + str(qty) + "\n"
 
-pdf.set_x(x + 40)
-pdf.multi_cell(40, 5, mini_str, 1)
+pdf.set_x(x + 60)
+pdf.multi_cell(50, 5, mini_str, 1)
 
 
 ############################################
 # Non link
 ############################################
 pdf.set_y(y)
-pdf.set_x(x + 80)
+pdf.set_x(x + 120)
 
 sorted_non_link = sorted(non_link_qty)
 
-pdf.cell(40, 5, 'Non-link', 1, 1)
+pdf.cell(50, 5, 'Non-link', 1, 1)
 nonlink_str = ""
 for sku in sorted_non_link:
   qty = non_link_qty[sku]
   
-  for _ in range(qty):
-    # product description associated with sku 
-    key = sku.replace("+egg", "")
-    if products.has_key(key):
-      desc = products[key]
-      labels.append(desc)
-    else: 
-      sku_product_not_found.append(key)
-  
   nonlink_str += sku + ": " + str(qty) + "\n"
 
-pdf.set_x(x + 80)
-pdf.multi_cell(40, 5, nonlink_str, 1)
+pdf.set_x(x + 120)
+pdf.multi_cell(50, 5, nonlink_str, 1)
 
 
 ############################################
 # Summary
 ############################################
-pdf.set_x(x + 80)
-pdf.cell(40, 5, "West cost orders: " +  str(len(west_coast_addresses)), 0, 1)
+pdf.set_x(x + 120)
+pdf.cell(50, 5, "West cost orders: " +  str(len(west_coast_addresses)), 0, 1)
 
-pdf.set_x(x + 80)
-pdf.cell(40, 5, "2 day orders: " +  str(len(two_day_addresses)), 0, 1)
+pdf.set_x(x + 120)
+pdf.cell(50, 5, "2 day orders: " +  str(len(two_day_addresses)), 0, 1)
 
-pdf.set_x(x + 80)
-pdf.cell(40, 5, "Ice total: " + str(ice_total), 0, 1)
+pdf.set_x(x + 120)
+pdf.cell(50, 5, "Ice total: " + str(ice_total), 0, 1)
 
 print sku_product_not_found
 
-pdf.add_page()
-
-cols = 2
-columnsize=(1000/14.0)+5.0/12.0
+pdf.add_page(orientation= 'P')
+pdf.set_font('Helvetica', '', 8)
+pdf.set_margins(0, 0)
+pdf.set_auto_page_break(False)
+x = y = 0
 
 for _, label in enumerate(labels):
-    x = pdf.get_x()
-    y = pdf.get_y()
+  if label == "":
+    continue
 
-    #print label
-    for j in range(cols):
-        text = label
+  (x1, y1, w, h) = Avery5160(x, y)
 
-        if j > 0: 
-          pdf.set_y(y)
-          pdf.set_x(x + columnsize +5)
+  pdf.set_xy(x1, y1)
+  pdf.multi_cell(w, h, label, 0)
 
-        pdf.set_font('Arial','',6)
-        pdf.multi_cell(columnsize,10,txt =text, border = 1)
-
-    #pdf.set_y(y+30+5)
-    #pdf.set_x(x + 80)
-    #pdf.ln(h = "")
+  y += 1 # next row
+  if y == 10:  # end of page wrap to next column
+    x += 1
+    y = 0
+    if x == 3:
+      x = 0
+      y = 0
+      pdf.add_page()
 
 pdf.output(file_name, 'F')

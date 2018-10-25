@@ -63,7 +63,7 @@ def ParseProductsFile(file):
           sku = val[sku_index]
           desc = val[desc_index]
 
-          product = title + " (" + sku + "): " + desc
+          product = "sku: " + sku + "\n" + title + ": " + desc
           products[sku] = product
 
     f.close()
