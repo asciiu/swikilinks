@@ -2,6 +2,7 @@ import csv
 import sys
 from fpdf import FPDF
 import datetime
+from products import ParseProductsFile
 
 file = sys.argv[1]
 f = open(file)
@@ -23,6 +24,10 @@ name_index = 0
 order_qty = {}
 mini_qty = {}
 non_link_qty = {}
+
+# this line will parse the products csv file and return 
+# a dictionary with sku -> description
+products = ParseProductsFile("products_export.csv")
 
 for i, val in enumerate(csv_file):
 
@@ -107,8 +112,11 @@ for i, val in enumerate(csv_file):
 
 f.close()
 
-# Summary Pick list to pid file here 
+
+# Summary Pick list to pdf file here 
 ####################################
+labels = []
+sku_product_not_found = []
 now = datetime.datetime.now()
 title = "pick-list date: " + now.strftime("%Y-%m-%d %H:%M:%S")
 file_name = "swicklist-" + now.strftime("%Y-%m-%d %H%M%S")
@@ -118,6 +126,9 @@ pdf.add_page()
 pdf.set_font('Times', '', 12)
 pdf.cell(40, 10, title, 0, 1)
 
+############################################
+# regular 
+############################################
 x = pdf.get_x()
 y = pdf.get_y()
 
@@ -128,10 +139,23 @@ pdf.cell(40, 5, 'Regular', 1, 1)
 regular_str = ""
 # for each sku in the sorted list of skus
 for sku in sorted_skus:
-  regular_str += sku + ": " + str(order_qty[sku]) + "\n"
+  qty = order_qty[sku]
+
+  for i in range(qty):
+    # product description associated with sku 
+    key = sku.replace("+egg", "")
+    if products.has_key(key):
+      desc = products[key]
+      labels.append(desc)
+    else: 
+      sku_product_not_found.append(key)
+      
+
+  # append to string 
+  regular_str += sku + ": " + str(qty) + "\n"
 
 # print the cell for regular orders
-pdf.multi_cell(40, 5, regular_str, 1, 0)
+pdf.multi_cell(40, 5, regular_str, 1)
 
 
 ############################################
@@ -145,10 +169,21 @@ sorted_mini_skus = sorted(mini_qty)
 pdf.cell(40, 5, 'Mini', 1, 1)
 mini_str = ""
 for sku in sorted_mini_skus:
-  mini_str += sku + ": " + str(mini_qty[sku]) + "\n"
+  qty = mini_qty[sku]
+
+  for i in range(qty):
+    # product description associated with sku 
+    key = sku.replace("+egg", "")
+    if products.has_key(key):
+      desc = products[key]
+      labels.append(desc)
+    else: 
+      sku_product_not_found.append(key)
+
+  mini_str += sku + ": " + str(qty) + "\n"
 
 pdf.set_x(x + 40)
-pdf.multi_cell(40, 5, mini_str, 1, 0)
+pdf.multi_cell(40, 5, mini_str, 1)
 
 
 ############################################
@@ -162,10 +197,21 @@ sorted_non_link = sorted(non_link_qty)
 pdf.cell(40, 5, 'Non-link', 1, 1)
 nonlink_str = ""
 for sku in sorted_non_link:
-  nonlink_str += sku + ": " + str(non_link_qty[sku]) + "\n"
+  qty = non_link_qty[sku]
+  
+  for _ in range(qty):
+    # product description associated with sku 
+    key = sku.replace("+egg", "")
+    if products.has_key(key):
+      desc = products[key]
+      labels.append(desc)
+    else: 
+      sku_product_not_found.append(key)
+  
+  nonlink_str += sku + ": " + str(qty) + "\n"
 
 pdf.set_x(x + 80)
-pdf.multi_cell(40, 5, nonlink_str, 1, 0)
+pdf.multi_cell(40, 5, nonlink_str, 1)
 
 
 ############################################
@@ -179,5 +225,31 @@ pdf.cell(40, 5, "2 day orders: " +  str(len(two_day_addresses)), 0, 1)
 
 pdf.set_x(x + 80)
 pdf.cell(40, 5, "Ice total: " + str(ice_total), 0, 1)
+
+print sku_product_not_found
+
+pdf.add_page()
+
+cols = 2
+columnsize=(1000/14.0)+5.0/12.0
+
+for _, label in enumerate(labels):
+    x = pdf.get_x()
+    y = pdf.get_y()
+
+    #print label
+    for j in range(cols):
+        text = label
+
+        if j > 0: 
+          pdf.set_y(y)
+          pdf.set_x(x + columnsize +5)
+
+        pdf.set_font('Arial','',6)
+        pdf.multi_cell(columnsize,10,txt =text, border = 1)
+
+    #pdf.set_y(y+30+5)
+    #pdf.set_x(x + 80)
+    #pdf.ln(h = "")
 
 pdf.output(file_name, 'F')
