@@ -101,13 +101,18 @@ for i, val in enumerate(csv_file):
   if "1350249218131" in options:
     sku = sku+"+egg"
 
+  # correct instances of RLQF, they should be RLQFV
+  if "RLQF" in sku:
+    sku = sku.replace("RLQF", "RLQFV")
+
   # label link orders only
   if "Mini" in item_name or "Micro" in item_name or "links" in item_name:
     for i in range(qty):
       # product description associated with sku 
       key = sku.replace("+egg", "")
       if products.has_key(key):
-        desc = "order #: " + order_num + " " + products[key]
+        #desc = "order #: " + order_num + " " + products[key]
+        desc = products[key]
         if "+egg" in sku:
           desc += " +egg"
 
@@ -161,7 +166,7 @@ for i, val in enumerate(csv_file):
       mini_qty[sku] = qty
 
   # non link orders 
-  elif "links" not in item_name:
+  elif "links" not in item_name and "RLTEGU" not in sku:
     if non_link_qty.has_key(sku):
       total = non_link_qty[sku]
       non_link_qty[sku] = total + qty
