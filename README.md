@@ -10,6 +10,7 @@ $ py2applet --make-setup products_export.csv vaseline.py
 ### Edit the setup.py file
 Edit setup to include:
 
+```
 from setuptools import setup
 
 Plist = dict(CFBundleDocumentTypes=[dict(CFBundleTypeExtensions=["csv"],
@@ -29,6 +30,7 @@ setup(
     options={'py2app': OPTIONS},
     setup_requires=['py2app'],
 )
+```
 
 ### Bundle the app.
 ```
