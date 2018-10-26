@@ -4,6 +4,7 @@ from fpdf import FPDF
 import datetime
 from products import ParseProductsFile
 from avery import Avery5160
+#import webbrowser
 
 file = sys.argv[1]
 f = open(file)
@@ -290,3 +291,7 @@ for _, label in enumerate(labels):
       pdf.add_page()
 
 pdf.output("../../../"+file_name, 'F')
+
+# open a public URL, in this case, the webbrowser docs
+#url = "../../../"+file_name+".pdf"
+#webbrowser.open(url,new=2)
