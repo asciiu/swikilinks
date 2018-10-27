@@ -288,8 +288,8 @@ for sku in sku_product_not_found:
   pdf.cell(10, 5, sku, 0, 0)
   ye += 5
 
-#pdf.output("../../../"+picks_file, 'F')
-pdf.output(picks_file, 'F')
+pdf.output("../../../"+picks_file, 'F')
+#pdf.output(picks_file, 'F')
 
 ############################################
 # Labels here 
@@ -320,5 +320,5 @@ for _, label in enumerate(labels):
       y = 0
       pdf.add_page()
 
-#pdf.output("../../../"+label_file, 'F')
-pdf.output(label_file, 'F')
+pdf.output("../../../"+label_file, 'F')
+#pdf.output(label_file, 'F')
