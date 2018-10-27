@@ -268,7 +268,7 @@ timestamp = "Date: " + now.strftime("%Y-%m-%d %H:%M:%S")
 pdf.cell(70, 5, timestamp, 0, 1) 
 
 pdf.set_xy(xn, y)
-pdf.cell(50, 5, "West cost orders", 1, 0)
+pdf.cell(50, 5, "West coast orders", 1, 0)
 pdf.cell(10, 5, str(len(west_coast_addresses)), 1, 0, 'R')
 
 pdf.set_xy(xn, y+5)
