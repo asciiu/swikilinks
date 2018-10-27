@@ -1,10 +1,48 @@
 import csv
 import sys
+import re
 from fpdf import FPDF
 import datetime
-from products import ParseProductsFile
+import products as prod
+#from products import ParseProductsFile
 from avery import Avery5160
 #import webbrowser
+
+
+def PrintCells(title, prds, x, y):
+  # Sort the dictionary of skus in order_qty
+  sorted_skus = sorted(prds)
+
+  # create header cell 
+  pdf.set_xy(x, y)
+  pdf.set_fill_color(200)
+  pdf.cell(70, 5, title, 1, 1, 'C', True)
+  pdf.set_fill_color(0)
+  y += 5
+
+  # for each sku in the sorted list of skus
+  for sku in sorted_skus:
+    rl = prds[sku]
+    sub_products = rl.subProducts()
+  
+    # print the parent sku
+    pdf.set_xy(x, y)
+    pdf.cell(20, 5*len(sub_products), rl.parent_sku, 1, 1)
+
+    xm = x + 20  
+    pdf.set_xy(xm, y)
+    for v in rl.subProducts():
+      pdf.cell(35, 5, v, 1, 0)
+      pdf.cell(10, 5, str(rl.product_qty[v]), 1, 0, 'R')
+
+      # this empty box is reserved for check box
+      pdf.cell(5, 5, "", 1, 0)
+
+      y += 5
+      pdf.set_xy(xm, y)
+
+  return (x+70, y)
+
 
 file = sys.argv[1]
 f = open(file)
@@ -26,14 +64,18 @@ order_num_index = 0
 order_num_min = 0
 order_num_max = 0
 order_qty = {}
-mini_qty = {}
+
+regular_products = {}
+mini_products = {}
+non_sausage = {}
+
 non_link_qty = {}
 labels = []
 sku_product_not_found = []
 
 # this line will parse the products csv file and return 
 # a dictionary with sku -> description
-products = ParseProductsFile("products_export.csv")
+products = prod.ParseProductsFile("products_export.csv")
 
 for i, val in enumerate(csv_file):
 
@@ -157,120 +199,103 @@ for i, val in enumerate(csv_file):
       else: 
         sku_product_not_found.append(key)
 
+  parent = prod.ExtractParentSku(sku)
+
   # mini orders have mini or micro in item name
   if "Mini" in item_name or "Micro" in item_name:
-    if mini_qty.has_key(sku):
-      total = mini_qty[sku]
-      mini_qty[sku] = total + qty
+    if mini_products.has_key(parent):
+      p = mini_products[parent]
+      p.addProductQty(sku, qty)
+      mini_products[parent] = p 
     else: 
-      mini_qty[sku] = qty
+      mini_products[parent] = prod.ReptilProductQty(sku, qty) 
 
-  # non link orders 
+  # non sausage orders 
   elif "links" not in item_name and "RLTEGU" not in sku:
-    if non_link_qty.has_key(sku):
-      total = non_link_qty[sku]
-      non_link_qty[sku] = total + qty
+    if non_sausage.has_key(parent):
+      p = non_sausage[parent]
+      p.addProductQty(sku, qty)
+      non_sausage[parent] = p 
     else: 
-      non_link_qty[sku] = qty
+      non_sausage[parent] = prod.ReptilProductQty(sku, qty) 
 
   # all link orders
   else:  
-    if order_qty.has_key(sku):
-      total = order_qty[sku]
-      order_qty[sku] = total + qty
-    else:
-      order_qty[sku] = qty
+    if regular_products.has_key(parent):
+      p = regular_products[parent]
+      p.addProductQty(sku, qty)
+      regular_products[parent] = p 
+    else: 
+      regular_products[parent] = prod.ReptilProductQty(sku, qty) 
 
 f.close()
 
 
-# Summary Pick list to pdf file here 
-####################################
+############################################
+# Pick list to pdf file here 
+############################################
 now = datetime.datetime.now()
-title = "pick-list date: " + now.strftime("%Y-%m-%d %H:%M:%S")
-subtitle = "orders: " + str(order_num_min) + " - " + str(order_num_max)
-file_name = "swiklist-" + now.strftime("%Y-%m-%d %H%M%S")
+picks_file = "reptilinks-picks-" + now.strftime("%Y-%m-%d %H%M%S")
+title = "Orders: " + str(order_num_min) + " - " + str(order_num_max)
 
 pdf = FPDF(format = "Letter")
 pdf.add_page()
 pdf.set_font('Times', '', 12)
-pdf.cell(70, 5, title, 0, 0)
-pdf.cell(60, 5, subtitle, 0, 1)
+pdf.cell(70, 5, title, 0, 1)
 
 ############################################
 # regular 
 ############################################
 x = pdf.get_x()
 y = pdf.get_y()
-
-# Sort the dictionary of skus in order_qty
-sorted_skus = sorted(order_qty)
-# create pdf cell
-pdf.cell(50, 5, 'Regular', 1, 1)
-regular_str = ""
-# for each sku in the sorted list of skus
-for sku in sorted_skus:
-  qty = order_qty[sku]
-
-  # append to string 
-  regular_str += sku + ": " + str(qty) + "\n"
-
-# print the cell for regular orders
-pdf.multi_cell(50, 5, regular_str, 1)
-
+(xr, yr) = PrintCells("Regular", regular_products, x, y)
 
 ############################################
 # Mini
 ############################################
-pdf.set_y(y)
-pdf.set_x(x + 60)
-
-sorted_mini_skus = sorted(mini_qty)
-
-pdf.cell(50, 5, 'Mini', 1, 1)
-mini_str = ""
-for sku in sorted_mini_skus:
-  qty = mini_qty[sku]
-
-  mini_str += sku + ": " + str(qty) + "\n"
-
-pdf.set_x(x + 60)
-pdf.multi_cell(50, 5, mini_str, 1)
-
+(xm, ym) = PrintCells("Mini", mini_products, xr, y)
 
 ############################################
 # Non link
 ############################################
-pdf.set_y(y)
-pdf.set_x(x + 120)
-
-sorted_non_link = sorted(non_link_qty)
-
-pdf.cell(50, 5, 'Non-link', 1, 1)
-nonlink_str = ""
-for sku in sorted_non_link:
-  qty = non_link_qty[sku]
-  
-  nonlink_str += sku + ": " + str(qty) + "\n"
-
-pdf.set_x(x + 120)
-pdf.multi_cell(50, 5, nonlink_str, 1)
-
+(xn, yn) = PrintCells("Non-link", non_sausage, xr, ym)
 
 ############################################
 # Summary
 ############################################
-pdf.set_x(x + 120)
-pdf.cell(50, 5, "West cost orders: " +  str(len(west_coast_addresses)), 0, 1)
+pdf.set_xy(xn, y-5)
+timestamp = "Date: " + now.strftime("%Y-%m-%d %H:%M:%S")
+pdf.cell(70, 5, timestamp, 0, 1) 
 
-pdf.set_x(x + 120)
-pdf.cell(50, 5, "2 day orders: " +  str(len(two_day_addresses)), 0, 1)
+pdf.set_xy(xn, y)
+pdf.cell(50, 5, "West cost orders", 1, 0)
+pdf.cell(10, 5, str(len(west_coast_addresses)), 1, 0, 'R')
 
-pdf.set_x(x + 120)
-pdf.cell(50, 5, "Ice total: " + str(ice_total), 0, 1)
+pdf.set_xy(xn, y+5)
+pdf.cell(50, 5, "2 day orders", 1, 0)
+pdf.cell(10, 5, str(len(two_day_addresses)), 1, 0, 'R')
 
-print sku_product_not_found
+pdf.set_xy(xn, y+10)
+pdf.cell(50, 5, "Ice total", 1, 0)
+pdf.cell(10, 5, str(ice_total), 1, 0, 'R')
 
+ye = y+15
+pdf.set_xy(xn, y+15)
+pdf.cell(50, 5, "Skus not found:", 0, 1)
+ye += 5
+for sku in sku_product_not_found:
+  pdf.set_xy(xn+5, ye)
+  pdf.cell(10, 5, sku, 0, 0)
+  ye += 5
+
+#pdf.output("../../../"+picks_file, 'F')
+pdf.output(picks_file, 'F')
+
+############################################
+# Labels here 
+############################################
+label_file = "reptilinks-labels-" + now.strftime("%Y-%m-%d %H%M%S")
+pdf = FPDF(format = "Letter")
 pdf.add_page(orientation= 'P')
 pdf.set_font('Helvetica', '', 8)
 pdf.set_margins(0, 0)
@@ -295,8 +320,5 @@ for _, label in enumerate(labels):
       y = 0
       pdf.add_page()
 
-pdf.output("../../../"+file_name, 'F')
-
-# open a public URL, in this case, the webbrowser docs
-#url = "../../../"+file_name+".pdf"
-#webbrowser.open(url,new=2)
+#pdf.output("../../../"+label_file, 'F')
+pdf.output(label_file, 'F')

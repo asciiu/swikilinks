@@ -42,7 +42,7 @@ def ParseProductsFile(file):
 def ExtractParentSku(sku):
   # if RLTEGU just return the sku
   if "RLTEGU" in sku:
-    return sku
+    return "RLTEGU"
 
   # if RL5050 return RL5050
   if sku.startswith("RL5050"):
@@ -65,3 +65,23 @@ def ExtractParentSku(sku):
   else: 
     # no match just returns the entire sku
     return sku
+
+class ReptilProductQty:
+   def __init__(self, sku, qty):
+     self.product_qty = {}
+     self.parent_sku = ExtractParentSku(sku) 
+     self.product_qty[sku] = qty
+   
+   def addProductQty(self, sku, qty):
+     if self.parent_sku != ExtractParentSku(sku):
+       return
+
+     total = qty
+     if self.product_qty.has_key(sku):
+       total = self.product_qty[sku] + qty
+
+     self.product_qty[sku] = total
+     return
+  
+   def subProducts(self):
+     return self.product_qty.keys()
