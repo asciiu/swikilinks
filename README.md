@@ -32,6 +32,13 @@ setup(
 )
 ```
 
+### Running via cli
+Uncomment output file lines in picklist_gen.py. 
+
+```
+$ python picklist_gen.py shipstations.csv 
+```
+
 ### Bundle the app.
 ```
 $ python setup.py py2app 
@@ -42,4 +49,5 @@ This will create the app under the dist folder.
 
 ## References
 https://py2app.readthedocs.io/en/latest/tutorial.html
+https://pyfpdf.readthedocs.io/en/latest/
 
