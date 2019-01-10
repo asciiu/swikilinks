@@ -289,9 +289,9 @@ for sku in sku_product_not_found:
   ye += 5
 
 # if running via app
-#pdf.output("../../../"+picks_file, 'F')
+pdf.output("../../../"+picks_file, 'F')
 # if running file manually via command line
-pdf.output(picks_file, 'F')
+#pdf.output(picks_file, 'F')
 
 ############################################
 # Labels here 
@@ -311,24 +311,12 @@ for _, label in enumerate(labels):
   if label == "":
     continue
 
-  #(x1, y1, w, h) = Avery5160(x, y)
-
-  #pdf.set_xy(x1, y1)
   pdf.add_page()
   pdf.image('reptilinks.png', x = x, y = y+0.05, w = 1, h = 0.4, type = 'PNG')
   pdf.set_xy(x+1, y+0.1)
   pdf.multi_cell(2.8, 0.1, label, 0)
 
-  #y += 0.1 # next row
-  #if y == 10:  # end of page wrap to next column
-  #  x += 1
-  #  y = 0
-  #  if x == 3:
-  #    x = 0
-  #    y = 0
-  #    pdf.add_page()
-
 # if running via app
-#pdf.output("../../../"+label_file, 'F')
+pdf.output("../../../"+label_file, 'F')
 # if running via cli
-pdf.output(label_file, 'F')
+#pdf.output(label_file, 'F')

@@ -18,8 +18,8 @@ Plist = dict(CFBundleDocumentTypes=[dict(CFBundleTypeExtensions=["csv"],
                                          CFBundleTypeRole="Viewer"),
                                     ]
              )
-APP = ['vaseline.py']
-DATA_FILES = ['products_export.csv']
+APP = ['picklist_gen.py']
+DATA_FILES = ['products_export.csv', 'reptilinks.png']
 OPTIONS = {'argv_emulation': True,
            'plist': Plist,
            }
