@@ -240,7 +240,7 @@ title = "Orders: " + str(order_num_min) + " - " + str(order_num_max)
 
 pdf = FPDF(format = "Letter")
 pdf.add_page()
-pdf.set_font('Times', '', 12)
+pdf.set_font('Times', '', 8)
 pdf.cell(70, 5, title, 0, 1)
 
 ############################################

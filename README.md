@@ -8,7 +8,7 @@ $ py2applet --make-setup products_export.csv vaseline.py
 ```
 
 ### Edit the setup.py file
-Edit setup to include:
+Edit setup.py to include:
 
 ```
 from setuptools import setup
