@@ -299,7 +299,7 @@ pdf.output("../../../"+picks_file, 'F')
 label_file = "reptilinks-labels-" + now.strftime("%Y-%m-%d %H%M%S")
 #pdf = FPDF(format = "Letter")
 pdf = FPDF('P', 'in', (4, 0.5))
-pdf.set_font('Helvetica', '', 8)
+pdf.set_font('Helvetica', '', 12)
 pdf.set_margins(0, 0)
 pdf.set_auto_page_break(False)
 x = y = 0
@@ -312,9 +312,9 @@ for _, label in enumerate(labels):
     continue
 
   pdf.add_page()
-  pdf.image('reptilinks.png', x = x, y = y+0.05, w = 1, h = 0.4, type = 'PNG')
-  pdf.set_xy(x+1, y+0.1)
-  pdf.multi_cell(2.8, 0.1, label, 0)
+  #pdf.image('reptilinks.png', x = x, y = y+0.05, w = 1, h = 0.4, type = 'PNG')
+  pdf.set_xy(x, y+0.03)
+  pdf.multi_cell(4, 0.15, label, 0)
 
 # if running via app
 pdf.output("../../../"+label_file, 'F')
