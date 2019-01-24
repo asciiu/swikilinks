@@ -144,8 +144,35 @@ for i, val in enumerate(csv_file):
     sku = sku+"+egg"
 
   # correct instances of RLQF, they should be RLQFV
-  if "RLQF" in sku:
-    sku = sku.replace("RLQF", "RLQFV")
+  #if "RLQF" in sku:
+  #  sku = sku.replace("RLQF", "RLQFV")
+
+  # if RLTEGU bundle is found 
+  if "RLTEGU" in sku:
+    # this bundle also contains 1 order of RLMBFV8
+    #parent = prod.ExtractParentSku("RLMBFV8")
+    parent = "RLMBFV"
+    sk = "RLMBFV8"
+    if "+egg" in sk:
+      sk = "RLMBFV8+egg"
+
+    p = regular_products[parent]
+    # increment prduct qty 
+    p.addProductQty(sk, 1)
+    regular_products[parent] = p 
+
+    # print label for RLMBFV8
+    desc = "sku: RLMBFV8\nMEGA-BLEND + F & V: 8-12 g (20/40 links)"
+    if "+egg" in sku:
+      desc = desc + " +egg"
+
+    labels.append(desc)
+    labels.append(desc)
+
+    # add 10 labels for tegu bundle
+    for i in range(0, 10):
+      desc = "sku: RLTEGU\nMegaBlend, Fruits & Veggies (100 uncased)" 
+      labels.append(desc)
 
   # label link orders only
   if "Mini" in item_name or "Micro" in item_name or "links" in item_name:
@@ -312,8 +339,10 @@ for _, label in enumerate(labels):
     continue
 
   pdf.add_page()
-  #pdf.image('reptilinks.png', x = x, y = y+0.05, w = 1, h = 0.4, type = 'PNG')
   pdf.set_xy(x, y+0.03)
+
+  # 2019/01/23 avoid text rollover for label
+  label = label.replace("+ Fruits and Veggies", "+ F & V")
   pdf.multi_cell(4, 0.15, label, 0)
 
 # if running via app
