@@ -271,7 +271,7 @@ f.close()
 # Pick list to pdf file here 
 ############################################
 now = datetime.datetime.now()
-picks_file = "reptilinks-picks-" + now.strftime("%Y-%m-%d %H%M%S")
+picks_file = "reptilinks-picks-" + now.strftime("%Y-%m-%d %H%M%S") + ".pdf"
 title = "Orders: " + str(order_num_min) + " - " + str(order_num_max)
 
 pdf = FPDF(format = "Letter")
@@ -336,7 +336,7 @@ pdf.output("../../../"+picks_file, 'F')
 ############################################
 # Labels here 
 ############################################
-label_file = "reptilinks-labels-" + now.strftime("%Y-%m-%d %H%M%S")
+label_file = "reptilinks-labels-" + now.strftime("%Y-%m-%d %H%M%S") + ".pdf"
 #pdf = FPDF(format = "Letter")
 pdf = FPDF('P', 'in', (4, 0.5))
 pdf.set_font('Helvetica', '', 12)
