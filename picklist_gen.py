@@ -13,24 +13,33 @@ def PrintCells(title, prds, x, y):
   # Sort the dictionary of skus in order_qty
   sorted_skus = sorted(prds)
 
+  # column coords
+  cx = x
+  cy = y
+
   # create header cell 
-  pdf.set_xy(x, y)
+  pdf.set_xy(cx, cy)
   pdf.set_fill_color(200)
   pdf.cell(70, 5, title, 1, 1, 'C', True)
   pdf.set_fill_color(0)
-  y += 5
+  cy += 5
 
   # for each sku in the sorted list of skus
   for sku in sorted_skus:
     rl = prds[sku]
     sub_products = rl.subProducts()
   
+    # begin new column
+    if cy > 250:
+      cy = y 
+      cx += 70
+
     # print the parent sku
-    pdf.set_xy(x, y)
+    pdf.set_xy(cx, cy)
     pdf.cell(20, 5*len(sub_products), rl.parent_sku, 1, 1)
 
-    xm = x + 20  
-    pdf.set_xy(xm, y)
+    xm = cx + 20  
+    pdf.set_xy(xm, cy)
     for v in rl.subProducts():
       pdf.cell(35, 5, v, 1, 0)
       pdf.cell(10, 5, str(rl.product_qty[v]), 1, 0, 'R')
@@ -38,10 +47,10 @@ def PrintCells(title, prds, x, y):
       # this empty box is reserved for check box
       pdf.cell(5, 5, "", 1, 0)
 
-      y += 5
-      pdf.set_xy(xm, y)
+      cy += 5
+      pdf.set_xy(xm, cy)
 
-  return (x+70, y)
+  return (cx, cy)
 
 
 file = sys.argv[1]
@@ -280,7 +289,7 @@ y = pdf.get_y()
 ############################################
 # Mini
 ############################################
-(xm, ym) = PrintCells("Mini", mini_products, xr, y)
+(xm, ym) = PrintCells("Mini", mini_products, xr, yr)
 
 ############################################
 # Non link
@@ -290,6 +299,10 @@ y = pdf.get_y()
 ############################################
 # Summary
 ############################################
+# if not 3rd column set summary to 3rd column
+if xn < 150:
+  xn += 70
+
 pdf.set_xy(xn, y-5)
 timestamp = "Date: " + now.strftime("%Y-%m-%d %H:%M:%S")
 pdf.cell(70, 5, timestamp, 0, 1) 
