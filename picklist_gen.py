@@ -167,21 +167,23 @@ for i, val in enumerate(csv_file):
 
     if regular_products.has_key(parent):
       p = regular_products[parent]
-      p.addProductQty(sku, 1)
+      p.addProductQty(sku, qty)
       regular_products[parent] = p 
     else: 
-      regular_products[parent] = prod.ReptilProductQty(sk, 1) 
+      regular_products[parent] = prod.ReptilProductQty(sk, qty) 
 
-    # print label for RLMBFV8
+    # print 2 labels for RLMBFV8 - 40 links total 
+    # therefore, 2 labels with 20/40 each
     desc = "sku: RLMBFV8\nMEGA-BLEND + F & V: 8-12 g (20/40 links)"
     if "+egg" in sku:
       desc = desc + " +egg"
 
-    labels.append(desc)
-    labels.append(desc)
+    for h in range(0, qty): 
+      labels.append(desc)
+      labels.append(desc)
 
     # add 10 labels for tegu bundle
-    for i in range(0, 10):
+    for i in range(0, 10*qty):
       desc = "sku: RLTEGU\nMegaBlend, Fruits & Veggies (100 uncased)" 
       labels.append(desc)
 
@@ -331,9 +333,9 @@ for sku in sku_product_not_found:
   ye += 5
 
 # if running via app
-#pdf.output("../../../"+picks_file, 'F')
+pdf.output("../../../"+picks_file, 'F')
 # if running file manually via command line
-pdf.output(picks_file, 'F')
+#pdf.output(picks_file, 'F')
 
 ############################################
 # Labels here 
@@ -361,6 +363,6 @@ for _, label in enumerate(labels):
   pdf.multi_cell(4, 0.15, label, 0)
 
 # if running via app
-#pdf.output("../../../"+label_file, 'F')
+pdf.output("../../../"+label_file, 'F')
 # if running via cli
-pdf.output(label_file, 'F')
+#pdf.output(label_file, 'F')
