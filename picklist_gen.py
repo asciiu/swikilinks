@@ -3,59 +3,8 @@ import sys
 import re
 from fpdf import FPDF
 import datetime
-import products as prod
-#from products import ParseProductsFile
-from avery import Avery5160
-#import webbrowser
-
-
-def PrintCells(title, prds, x, y):
-  # Sort the dictionary of skus in order_qty
-  sorted_skus = sorted(prds)
-
-  # column coords
-  cx = x
-  cy = y
-
-  # create header cell 
-  pdf.set_xy(cx, cy)
-  pdf.set_fill_color(200)
-  pdf.cell(70, 5, title, 1, 1, 'C', True)
-  pdf.set_fill_color(0)
-  cy += 5
-
-  # for each sku in the sorted list of skus
-  for sku in sorted_skus:
-    rl = prds[sku]
-    sub_products = rl.subProducts()
-  
-    # begin new column
-    if cy > 250:
-      cy = y 
-      cx += 70
-
-    # print the parent sku
-    pdf.set_xy(cx, cy)
-    pdf.cell(20, 5*len(sub_products), rl.parent_sku, 1, 1)
-
-    xm = cx + 20  
-    pdf.set_xy(xm, cy)
-    for v in rl.subProducts():
-      pdf.cell(35, 5, v, 1, 0)
-      pdf.cell(10, 5, str(rl.product_qty[v]), 1, 0, 'R')
-
-      # this empty box is reserved for check box
-      pdf.cell(5, 5, "", 1, 0)
-
-      cy += 5
-      pdf.set_xy(xm, cy)
-
-  return (cx, cy)
-
-
-file = sys.argv[1]
-f = open(file)
-csv_file = csv.reader(f)
+import reptile 
+import layout
 
 two_day_addresses = []
 west_coast_addresses = []
@@ -83,163 +32,95 @@ labels = []
 sku_product_not_found = []
 
 # this line will parse the products csv file and return 
-# a dictionary with sku -> description
-products = prod.ParseProductsFile("products_export.csv")
+# a dictionary with sku: label_description 
+products = reptile.ParseProductsFile("products_export.csv")
 
-for i, val in enumerate(csv_file):
-
+# ship station csv file required as command line argument
+sscsv = sys.argv[1]
+f = open(sscsv)
+for row_number, row in enumerate(csv.reader(f)):
   # first row should be headers
-  if i == 0:
+  if row_number == 0:
     # assign indices of columns based upon headers
-    for j, header in enumerate(val):
+    for col, header in enumerate(row):
       if header == "Order - Number":
-        order_number_index = j
+        order_number_index = col 
       if header == "Item - SKU":
-        sku_index = j
+        sku_index = col
       if header == "Item - Qty":
-        qty_index = j
+        qty_index = col
       if header == "Item - Options":
-        option_index = j
+        option_index = col
       if header == "Custom - Field 1":
-        custom_index = j
+        custom_index = col
       if header == "Ship To - Address 1":
-        address_index = j
+        address_index = col
       if header == "Order - Number":
-        order_index = j
+        order_index = col
       if header == "Item - Name":
-        name_index = j
+        name_index = col
     
     # skip outer loop once since the first row are headers
     continue
 
-  sku = val[sku_index]
-  order_num = val[order_num_index]
-  qty = int(val[qty_index])
-  options = val[option_index]
-  custom = val[custom_index]
-  address = val[address_index]
-  order_num = val[order_index]
-  item_name = val[name_index]
+  sku = row[sku_index]
+  order_num = row[order_num_index]
+  qty = int(row[qty_index])
+  options = row[option_index]
+  custom = row[custom_index]
+  address = row[address_index]
+  order_num = row[order_index]
+  item_name = row[name_index]
 
+  desc = products[sku] if products.has_key(sku) else ""
+  parent = reptile.ExtractParentSku(sku)
+
+  # keep track of the min/max order numbers so we can report
+  # the order numbers at the top page of the pick list
+  # i.e: "Orders: RL2586 - RL2617"
   if order_num_min == 0 or order_num_min > order_num:
     order_num_min = order_num 
-  
   if order_num_max == 0 or order_num_max < order_num:
     order_num_max = order_num
 
-  # count unique addresses that are west coast orders
   if address not in west_coast_addresses and "West" in custom:
+    # count unique addresses that are west coast orders
     west_coast_addresses.append(address)
   elif address not in two_day_addresses and "West" not in custom:
+    # count unique 2 day addresses that don't have "West" in the custom field
     two_day_addresses.append(address)
 
   # skip no sku rows
   if sku == "": 
     continue
 
-  # dry ice total
+  # this a new order number?
   if order_num not in order_nums:
+    order_nums.append(order_num)
+    # increment dry ice total 
     if "West" in custom:
       ice_total += 40
     else:
       ice_total += 20
 
-  if order_num not in order_nums:
-    order_nums.append(order_num)
-
   # Find the orders that have egg added, and modify the SKU number so that
   # those items appear as a unique product.  
+  plus_egg = False
   if "1350249218131" in options:
     sku = sku+"+egg"
-
-  # correct instances of RLQF, they should be RLQFV
-  #if "RLQF" in sku:
-  #  sku = sku.replace("RLQF", "RLQFV")
+    desc = desc +" +egg"
+    plus_egg = True
 
   # if RLTEGU bundle is found 
   if "RLTEGU" in sku:
-    # this bundle also contains 1 order of RLMBFV8
-    #parent = prod.ExtractParentSku("RLMBFV8")
-    parent = "RLMBFV"
-    sk = "RLMBFV8"
-    if "+egg" in sk:
-      sk = "RLMBFV8+egg"
-
-    if regular_products.has_key(parent):
-      p = regular_products[parent]
-      p.addProductQty(sku, qty)
-      regular_products[parent] = p 
-    else: 
-      regular_products[parent] = prod.ReptilProductQty(sk, qty) 
-
-    # print 2 labels for RLMBFV8 - 40 links total 
-    # therefore, 2 labels with 20/40 each
-    desc = "sku: RLMBFV8\nMEGA-BLEND + F & V: 8-12 g (20/40 links)"
-    if "+egg" in sku:
-      desc = desc + " +egg"
-
-    for h in range(0, qty): 
-      labels.append(desc)
-      labels.append(desc)
-
-    # add 10 labels for tegu bundle
-    for i in range(0, 10*qty):
-      desc = "sku: RLTEGU\nMegaBlend, Fruits & Veggies (100 uncased)" 
-      labels.append(desc)
+    reptile.TeguBundle(qty, plus_egg, regular_products, labels)
 
   # label link orders only
   if "Mini" in item_name or "Micro" in item_name or "links" in item_name:
-    for i in range(qty):
-      # product description associated with sku 
-      key = sku.replace("+egg", "")
-      if products.has_key(key):
-        #desc = "order #: " + order_num + " " + products[key]
-        desc = products[key]
-        if "+egg" in sku:
-          desc += " +egg"
-
-        # 40 links = 2 labels with 20 links 
-        if "(40 links)" in desc:
-          desc = desc.replace("(40 links)", "(20/40 links)")
-          labels.append(desc)
-          labels.append(desc)
-
-        # 24 links = 2 labels with 12 links
-        elif "(24 links)" in desc:
-          desc = desc.replace("(24 links)", "(12/24 links)")
-          labels.append(desc)
-          labels.append(desc)
-
-        # 20 links = 2 labels with 10 links
-        elif "(20 links)" in desc:
-          desc = desc.replace("(20 links)", "(10/20 links)")
-          labels.append(desc)
-          labels.append(desc)
-
-        # 10 links = 2 labels with 5 links
-        elif "(10 links)" in desc:
-          desc = desc.replace("(10 links)", "(5/10 links)")
-          labels.append(desc)
-          labels.append(desc)
-
-        # 7 links = 2 labels with 3 links and 4 links 
-        elif "(7 links)" in desc:
-          d1 = desc.replace("(7 links)", "(3/7 links)")
-          labels.append(d1)
-          d2 = desc.replace("(7 links)", "(4/7 links)")
-          labels.append(d2)
-
-        # 6 links = 2 labels with 3 links
-        elif "(6 links)" in desc:
-          desc = desc.replace("(6 links)", "(3/6 links)")
-          labels.append(desc)
-          labels.append(desc)
-        else:
-          labels.append(desc)
-      else: 
-        sku_product_not_found.append(key)
-
-  parent = prod.ExtractParentSku(sku)
+    if not products.has_key(sku):
+      sku_product_not_found.append(sku)
+    else:
+      reptile.MiniMicro(qty, plus_egg, desc, regular_products, labels)
 
   # mini orders have mini or micro in item name
   if "Mini" in item_name or "Micro" in item_name:
@@ -248,7 +129,7 @@ for i, val in enumerate(csv_file):
       p.addProductQty(sku, qty)
       mini_products[parent] = p 
     else: 
-      mini_products[parent] = prod.ReptilProductQty(sku, qty) 
+      mini_products[parent] = reptile.ReptilProductQty(sku, qty) 
 
   # non sausage orders 
   elif "links" not in item_name and "RLTEGU" not in sku:
@@ -257,7 +138,7 @@ for i, val in enumerate(csv_file):
       p.addProductQty(sku, qty)
       non_sausage[parent] = p 
     else: 
-      non_sausage[parent] = prod.ReptilProductQty(sku, qty) 
+      non_sausage[parent] = reptile.ReptilProductQty(sku, qty) 
 
   # all link orders
   else:  
@@ -266,7 +147,7 @@ for i, val in enumerate(csv_file):
       p.addProductQty(sku, qty)
       regular_products[parent] = p 
     else: 
-      regular_products[parent] = prod.ReptilProductQty(sku, qty) 
+      regular_products[parent] = reptile.ReptilProductQty(sku, qty) 
 
 f.close()
 
@@ -288,17 +169,17 @@ pdf.cell(70, 5, title, 0, 1)
 ############################################
 x = pdf.get_x()
 y = pdf.get_y()
-(xr, yr) = PrintCells("Regular", regular_products, x, y)
+(xr, yr) = layout.PrintCells(pdf, "Regular", regular_products, x, y)
 
 ############################################
 # Mini
 ############################################
-(xm, ym) = PrintCells("Mini", mini_products, xr, yr)
+(xm, ym) = layout.PrintCells(pdf, "Mini", mini_products, xr, yr)
 
 ############################################
 # Non link
 ############################################
-(xn, yn) = PrintCells("Non-link", non_sausage, xr, ym)
+(xn, yn) = layout.PrintCells(pdf, "Non-link", non_sausage, xr, ym)
 
 ############################################
 # Summary
@@ -333,9 +214,9 @@ for sku in sku_product_not_found:
   ye += 5
 
 # if running via app
-pdf.output("../../../"+picks_file, 'F')
+#pdf.output("../../../"+picks_file, 'F')
 # if running file manually via command line
-#pdf.output(picks_file, 'F')
+pdf.output(picks_file, 'F')
 
 ############################################
 # Labels here 
@@ -363,6 +244,6 @@ for _, label in enumerate(labels):
   pdf.multi_cell(4, 0.15, label, 0)
 
 # if running via app
-pdf.output("../../../"+label_file, 'F')
+#pdf.output("../../../"+label_file, 'F')
 # if running via cli
-#pdf.output(label_file, 'F')
+pdf.output(label_file, 'F')
