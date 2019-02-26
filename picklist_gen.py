@@ -6,6 +6,14 @@ import datetime
 import reptile 
 import layout
 
+def addProdQty(category, parent, sku, qty): 
+  if category.has_key(parent):
+    p = category[parent]
+    p.addProductQty(sku, qty)
+    category[parent] = p 
+  else: 
+    category[parent] = reptile.ReptilProductQty(sku, qty)
+
 two_day_addresses = []
 west_coast_addresses = []
 order_nums = []
@@ -71,7 +79,6 @@ for row_number, row in enumerate(csv.reader(f)):
   address = row[address_index]
   order_num = row[order_index]
   item_name = row[name_index]
-
   desc = products[sku] if products.has_key(sku) else ""
   parent = reptile.ExtractParentSku(sku)
 
@@ -111,45 +118,33 @@ for row_number, row in enumerate(csv.reader(f)):
     desc = desc +" +egg"
     plus_egg = True
 
-  # if RLTEGU bundle is found 
-  if "RLTEGU" in sku:
-    reptile.TeguBundle(qty, plus_egg, regular_products, labels)
-
-  # label link orders only
-  if "Mini" in item_name or "Micro" in item_name or "links" in item_name:
-    if not products.has_key(sku):
-      sku_product_not_found.append(sku)
-    else:
-      reptile.MiniMicro(qty, plus_egg, desc, regular_products, labels)
-
+  # Picklist Data:
   # mini orders have mini or micro in item name
   if "Mini" in item_name or "Micro" in item_name:
-    if mini_products.has_key(parent):
-      p = mini_products[parent]
-      p.addProductQty(sku, qty)
-      mini_products[parent] = p 
-    else: 
-      mini_products[parent] = reptile.ReptilProductQty(sku, qty) 
-
+    addProdQty(mini_products, parent, sku, qty)
   # non sausage orders 
-  elif "links" not in item_name and "RLTEGU" not in sku:
-    if non_sausage.has_key(parent):
-      p = non_sausage[parent]
-      p.addProductQty(sku, qty)
-      non_sausage[parent] = p 
-    else: 
-      non_sausage[parent] = reptile.ReptilProductQty(sku, qty) 
-
+  elif "links" not in item_name and "RLTEGU" not in sku and "RLMULTR-01" not in sku:
+    addProdQty(non_sausage, parent, sku, qty)
   # all link orders
   else:  
-    if regular_products.has_key(parent):
-      p = regular_products[parent]
-      p.addProductQty(sku, qty)
-      regular_products[parent] = p 
-    else: 
-      regular_products[parent] = reptile.ReptilProductQty(sku, qty) 
+    addProdQty(regular_products, parent, sku, qty)
 
+  # Labels Data:
+  if "RLTEGU" in sku:
+    # if RLTEGU bundle is found 
+    reptile.TeguBundle(qty, plus_egg, regular_products, labels)
+
+  elif "RLMULTR-01" in sku:
+    reptile.RabbitBundle(qty, plus_egg, labels)
+
+  elif "Mini" in item_name or "Micro" in item_name or "links" in item_name:
+    if not products.has_key(sku.replace("+egg", "")):
+      sku_product_not_found.append(sku)
+    else:
+      reptile.MiniMicro(qty, desc, labels)
+  
 f.close()
+
 
 
 ############################################
@@ -214,9 +209,9 @@ for sku in sku_product_not_found:
   ye += 5
 
 # if running via app
-#pdf.output("../../../"+picks_file, 'F')
+pdf.output("../../../"+picks_file, 'F')
 # if running file manually via command line
-pdf.output(picks_file, 'F')
+#pdf.output(picks_file, 'F')
 
 ############################################
 # Labels here 
@@ -244,6 +239,6 @@ for _, label in enumerate(labels):
   pdf.multi_cell(4, 0.15, label, 0)
 
 # if running via app
-#pdf.output("../../../"+label_file, 'F')
+pdf.output("../../../"+label_file, 'F')
 # if running via cli
-pdf.output(label_file, 'F')
+#pdf.output(label_file, 'F')

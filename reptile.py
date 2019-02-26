@@ -99,6 +99,26 @@ class ReptilProductQty:
      return self.product_qty.keys()
 
 
+def RabbitBundle(qty, plus_egg, labels):
+  multipack = [
+    "sku: RLMULTR-01\nRabbit Multipack: 8-12g (10/10 links)",
+    "sku: RLMULTR-01\nRabbit Multipack: 16-20g (5/5 links)",
+    "sku: RLMULTR-01\nRabbit Multipack: 25g (5/5 links)",
+    "sku: RLMULTR-01\nRabbit Multipack: 50g short (4/4 links)",
+    "sku: RLMULTR-01\nRabbit Multipack: 50g long  (4/4 links)",
+    "sku: RLMULTR-01\nRabbit Multipack: 75g (3/3 links)",
+    "sku: RLMULTR-01\nRabbit Multipack: 100g (2/2 links)"
+  ]
+
+  if plus_egg:
+    for i, _ in enumerate(multipack):
+      multipack[i] = multipack[i] + " +egg"
+  
+  for _ in range(qty):
+    for i, d in enumerate(multipack):
+      labels.append(d)
+
+
 def TeguBundle(qty, plus_egg, regular_products, labels):
   # this bundle also contains 1 order of RLMBFV8
   parent = "RLMBFV"
@@ -121,37 +141,37 @@ def TeguBundle(qty, plus_egg, regular_products, labels):
     labels.append(desc)
     labels.append(desc)
 
-  # add 10 labels for tegu bundle
+  # add 10*qty labels for tegu bundle
   for i in range(0, 10*qty):
     desc = "sku: RLTEGU\nMegaBlend, Fruits & Veggies (100 uncased)" 
     labels.append(desc)
 
 
-def MiniMicro(qty, plus_egg, desc, regular_products, labels):
+def MiniMicro(qty, desc, labels):
   for _ in range(qty):
     # 40 links = 2 labels with 20 links 
     if "(40 links)" in desc:
-      desc = desc.replace("(40 links)", "(20/40 links)")
-      labels.append(desc)
-      labels.append(desc)
+      d = desc.replace("(40 links)", "(20/40 links)")
+      labels.append(d)
+      labels.append(d)
 
     # 24 links = 2 labels with 12 links
     elif "(24 links)" in desc:
-      desc = desc.replace("(24 links)", "(12/24 links)")
-      labels.append(desc)
-      labels.append(desc)
+      d = desc.replace("(24 links)", "(12/24 links)")
+      labels.append(d)
+      labels.append(d)
 
     # 20 links = 2 labels with 10 links
     elif "(20 links)" in desc:
-      desc = desc.replace("(20 links)", "(10/20 links)")
-      labels.append(desc)
-      labels.append(desc)
+      d = desc.replace("(20 links)", "(10/20 links)")
+      labels.append(d)
+      labels.append(d)
 
     # 10 links = 2 labels with 5 links
     elif "(10 links)" in desc:
-      desc = desc.replace("(10 links)", "(5/10 links)")
-      labels.append(desc)
-      labels.append(desc)
+      d = desc.replace("(10 links)", "(5/10 links)")
+      labels.append(d)
+      labels.append(d)
 
     # 7 links = 2 labels with 3 links and 4 links 
     elif "(7 links)" in desc:
@@ -162,8 +182,8 @@ def MiniMicro(qty, plus_egg, desc, regular_products, labels):
 
     # 6 links = 2 labels with 3 links
     elif "(6 links)" in desc:
-      desc = desc.replace("(6 links)", "(3/6 links)")
-      labels.append(desc)
-      labels.append(desc)
+      d = desc.replace("(6 links)", "(3/6 links)")
+      labels.append(d)
+      labels.append(d)
     else:
-      labels.append(desc)
+      labels.append(d)
