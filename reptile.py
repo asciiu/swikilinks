@@ -186,4 +186,4 @@ def MiniMicro(qty, desc, labels):
       labels.append(d)
       labels.append(d)
     else:
-      labels.append(d)
+      labels.append(desc)
