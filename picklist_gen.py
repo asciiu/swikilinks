@@ -5,6 +5,7 @@ from fpdf import FPDF
 import datetime
 import reptile 
 import layout
+import itertools
 
 def addProdQty(category, parent, sku, qty): 
   if category.has_key(parent):
@@ -24,7 +25,6 @@ qty_index = 0
 option_index = 0
 custom_index = 0
 addres_index = 0
-order_index = 0
 name_index = 0
 order_num_index = 0
 order_num_min = 0
@@ -46,30 +46,31 @@ products = reptile.ParseProductsFile("products_export.csv")
 # ship station csv file required as command line argument
 sscsv = sys.argv[1]
 f = open(sscsv)
-for row_number, row in enumerate(csv.reader(f)):
-  # first row should be headers
-  if row_number == 0:
-    # assign indices of columns based upon headers
-    for col, header in enumerate(row):
-      if header == "Order - Number":
-        order_number_index = col 
-      if header == "Item - SKU":
-        sku_index = col
-      if header == "Item - Qty":
-        qty_index = col
-      if header == "Item - Options":
-        option_index = col
-      if header == "Custom - Field 1":
-        custom_index = col
-      if header == "Ship To - Address 1":
-        address_index = col
-      if header == "Order - Number":
-        order_index = col
-      if header == "Item - Name":
-        name_index = col
-    
-    # skip outer loop once since the first row are headers
-    continue
+
+# find column numbers with the following headers 
+ship_station_iter = iter(csv.reader(f))
+headers = next(ship_station_iter)
+# assign indices of columns based upon headers
+for col, header in enumerate(headers):
+  if header == "Order - Number":
+    order_num_index = col 
+  if header == "Item - SKU":
+    sku_index = col
+  if header == "Item - Qty":
+    qty_index = col
+  if header == "Item - Options":
+    option_index = col
+  if header == "Custom - Field 1":
+    custom_index = col
+  if header == "Ship To - Address 1":
+    address_index = col
+  if header == "Item - Name":
+    name_index = col
+
+while True: 
+  row = next(ship_station_iter, False)
+  if not row:
+    break
 
   sku = row[sku_index]
   order_num = row[order_num_index]
@@ -77,7 +78,6 @@ for row_number, row in enumerate(csv.reader(f)):
   options = row[option_index]
   custom = row[custom_index]
   address = row[address_index]
-  order_num = row[order_index]
   item_name = row[name_index]
   desc = products[sku] if products.has_key(sku) else ""
   parent = reptile.ExtractParentSku(sku)
@@ -98,8 +98,8 @@ for row_number, row in enumerate(csv.reader(f)):
     two_day_addresses.append(address)
 
   # skip no sku rows
-  if sku == "": 
-    continue
+  #if sku == "": 
+  #  continue
 
   # this a new order number?
   if order_num not in order_nums:
@@ -113,10 +113,26 @@ for row_number, row in enumerate(csv.reader(f)):
   # Find the orders that have egg added, and modify the SKU number so that
   # those items appear as a unique product.  
   plus_egg = False
-  if "1350249218131" in options:
+  mix_eggs = "Mix in 1-dozen quail eggs" 
+  if "1350249218131" in options or mix_eggs in item_name:
     sku = sku+"+egg"
     desc = desc +" +egg"
     plus_egg = True
+  else: 
+    # NOTE: if the number is missing we need to process the following rows
+    while True:
+      next_row = next(ship_station_iter, False)
+      if not next_row:
+        break
+      elif next_row[order_num_index] != order_num:
+        # break this loop when the order number changes
+        ship_station_iter = itertools.chain([next_row], ship_station_iter)
+        break
+      elif mix_eggs in next_row[name_index]:
+        sku = sku+"+egg"
+        desc = desc +" +egg"
+        plus_egg = True
+        break
 
   # Picklist Data:
   # mini orders have mini or micro in item name
