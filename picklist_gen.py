@@ -98,8 +98,8 @@ while True:
     two_day_addresses.append(address)
 
   # skip no sku rows
-  #if sku == "": 
-  #  continue
+  if sku == "": 
+    continue
 
   # this a new order number?
   if order_num not in order_nums:
@@ -125,7 +125,11 @@ while True:
       if not next_row:
         break
       elif next_row[order_num_index] != order_num:
-        # break this loop when the order number changes
+        # reprocess this row when the order number changes
+        ship_station_iter = itertools.chain([next_row], ship_station_iter)
+        break
+      elif next_row[sku_index] != "" and next_row[sku_index] != sku:
+        # reprocess this row the sku number changes
         ship_station_iter = itertools.chain([next_row], ship_station_iter)
         break
       elif mix_eggs in next_row[name_index]:
