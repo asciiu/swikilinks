@@ -16,6 +16,7 @@ APP = ['picklist_gen.py']
 DATA_FILES = ['products_export.csv', 'reptilinks.png']
 OPTIONS = {'argv_emulation': True,
            'plist': Plist,
+           'iconfile':'hotdog.icns',
            }
 
 setup(
