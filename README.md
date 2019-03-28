@@ -1,10 +1,11 @@
 # swikilinks 
 
-Picklist and label generator from ship station csv. 
+Picklist and label generator from ship station csv.  The main logic for the pick list gen is in the
+picklist_gen.py file. Refer to picklist_gen.py to see how the ship station csv is parsed.
 
 ### Prerequisites
 
-- python 2.7 or better (comes preinstalled on all macs)
+- python 2.7.x (comes preinstalled on all macs)
 - install python pip using "sudo easy_install pip"
 - install python py2app using "pip install py2app"
 - install python pyfpdf using "pip install fpdf==1.7"

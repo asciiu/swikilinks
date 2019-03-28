@@ -311,8 +311,6 @@ for _, label in enumerate(labels):
   label = label.replace("+ Fruits and Veggies", "+ F & V")
   pdf.multi_cell(4, 0.15, label, 0)
 
-print len(sys.argv)
-
 if len(sys.argv) > 2:
   # if running via cli
   pdf.output(label_file, 'F')
