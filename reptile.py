@@ -98,6 +98,29 @@ class ReptilProductQty:
    def subProducts(self):
      return self.product_qty.keys()
 
+# This is a function that adds product quantity. You can think of the 
+# products as a collection of regular, mini, or non sausage product gruops. 
+# It is how the code represents the regular or mini subsections in the pick list 
+# pdf.
+#
+# params: 
+#      category - this is of type dictionary where the key is a string like "RLQR" and the value 
+#             is an object of type ReptilProductQty above. 
+#      parent - parent sku string e.g. "RLQR"
+#      sku - the full product sku e.g. "RLQR25"
+#      qty - the qty integer to add
+def AddProdQty(products, parent_sku, sku, qty): 
+  # if the products dictionary contains an existing ReptilProductQty value with the 
+  # parent_sku add the qty to that existing value 
+  if products.has_key(parent_sku):
+    p = products[parent_sku]
+    p.addProductQty(sku, qty)
+    products[parent_sku] = p 
+  else: 
+    products[parent_sku] = ReptilProductQty(sku, qty)
+
+  return products
+
 
 def RabbitBundle(qty, plus_egg, labels):
   multipack = [

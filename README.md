@@ -36,7 +36,7 @@ setup(
 Uncomment output file lines in picklist_gen.py. 
 
 ```
-$ python picklist_gen.py shipstations.csv 
+$ python picklist_gen.py shipstations.csv true
 ```
 
 ### Bundle the app.

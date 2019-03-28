@@ -7,29 +7,6 @@ import reptile
 import layout
 import itertools
 
-# This is a function that adds product quantity. You can think of the 
-# products as a collection of regular, mini, or non sausage product gruops. 
-# It is how the code represents the regular or mini subsections in the pick list 
-# pdf.
-#
-# params: 
-#      category - this is of type dictionary where the key is a string like "RLQR" and the value 
-#             is an object of type ReptilProductQty (reptile.py)
-#      parent - parent sku string e.g. "RLQR"
-#      sku - the full product sku e.g. "RLQR25"
-#      qty - the qty integer to add
-def addProdQty(products, parent_sku, sku, qty): 
-  # if the products dictionary contains an existing ReptilProductQty value with the 
-  # parent_sku add the qty to that existing value 
-  if products.has_key(parent_sku):
-    p = products[parent]
-    p.addProductQty(sku, qty)
-    products[parent] = p 
-  else: 
-    products[parent] = reptile.ReptilProductQty(sku, qty)
-
-  return products
-
 ################################################################################################
 # Main script stuff follows here. You may execute this script from the command line (terminal app of OSX).
 # terminal command: "python /path/to/picklist_gen.py /path/to/csv"
@@ -202,13 +179,13 @@ while True:
   # Picklist Data:
   # mini orders have mini or micro in item name
   if "Mini" in item_name or "Micro" in item_name:
-    mini_products = addProdQty(mini_products, parent, sku, qty)
+    mini_products = reptile.AddProdQty(mini_products, parent, sku, qty)
   # non sausage orders 
   elif "links" not in item_name and "RLTEGU" not in sku and "RLMULTR-01" not in sku:
-    non_sausage = addProdQty(non_sausage, parent, sku, qty)
+    non_sausage = reptile.AddProdQty(non_sausage, parent, sku, qty)
   # all link orders
   else:  
-    regular_products = addProdQty(regular_products, parent, sku, qty)
+    regular_products = reptile.AddProdQty(regular_products, parent, sku, qty)
 
   # Labels Data:
   if "RLTEGU" in sku:
@@ -302,9 +279,12 @@ for sku in sku_product_not_found:
   ye += 5
 
 # if running via app
-pdf.output("../../../"+picks_file, 'F')
-# if running file manually via command line
-#pdf.output(picks_file, 'F')
+if len(sys.argv) > 2:
+  # if running file manually via command line
+  pdf.output(picks_file, 'F')
+else:
+  # if running via app
+  pdf.output("../../../"+picks_file, 'F')
 
 ############################################
 # Labels here 
@@ -331,7 +311,10 @@ for _, label in enumerate(labels):
   label = label.replace("+ Fruits and Veggies", "+ F & V")
   pdf.multi_cell(4, 0.15, label, 0)
 
-# if running via app
-pdf.output("../../../"+label_file, 'F')
-# if running via cli
-#pdf.output(label_file, 'F')
+print len(sys.argv)
+
+if len(sys.argv) > 2:
+  # if running via cli
+  pdf.output(label_file, 'F')
+else:
+  pdf.output("../../../"+label_file, 'F')
