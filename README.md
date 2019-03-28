@@ -2,45 +2,25 @@
 
 Picklist and label generator from ship station csv. 
 
-### Gen the py2applet setup.py config
+### Prerequisites
+
+- python 2.7 or better (comes preinstalled on all macs)
+- install python pip using "sudo easy_install pip"
+- install python py2app using "pip install py2app"
+- install python pyfpdf using "pip install fpdf==1.7"
+
+### Running via command line in terminal app: 
 ```
-$ py2applet --make-setup products_export.csv vaseline.py
-```
-
-### Edit the setup.py file
-Edit setup.py to include:
-
-```
-from setuptools import setup
-
-Plist = dict(CFBundleDocumentTypes=[dict(CFBundleTypeExtensions=["csv"],
-                                         CFBundleTypeName="CSV Document",
-                                         CFBundleTypeRole="Viewer"),
-                                    ]
-             )
-APP = ['picklist_gen.py']
-DATA_FILES = ['products_export.csv', 'reptilinks.png']
-OPTIONS = {'argv_emulation': True,
-           'plist': Plist,
-           }
-
-setup(
-    app=APP,
-    data_files=DATA_FILES,
-    options={'py2app': OPTIONS},
-    setup_requires=['py2app'],
-)
+$ cd /path/to/swickilinks
+$ python picklist_gen.py /path/to/shipstations.csv true
 ```
 
-### Running via cli
-Uncomment output file lines in picklist_gen.py. 
+This method of running the script will dump the label and pick list pdf 
+in the same directory.
 
+### How to generate the hotdog app in the terminal app.
 ```
-$ python picklist_gen.py shipstations.csv true
-```
-
-### Bundle the app.
-```
+$ cd /path/to/swickilinks
 $ python setup.py py2app 
 ```
 
@@ -48,6 +28,6 @@ This will create the app under the dist folder.
 
 
 ## References
-* https://py2app.readthedocs.io/en/latest/tutorial.html
-* https://pyfpdf.readthedocs.io/en/latest/
+- https://py2app.readthedocs.io/en/latest/tutorial.html
+- https://pyfpdf.readthedocs.io/en/latest/
 
