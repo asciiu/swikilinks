@@ -48,6 +48,6 @@ This will create the app under the dist folder.
 
 
 ## References
-https://py2app.readthedocs.io/en/latest/tutorial.html
-https://pyfpdf.readthedocs.io/en/latest/
+* https://py2app.readthedocs.io/en/latest/tutorial.html
+* https://pyfpdf.readthedocs.io/en/latest/
 

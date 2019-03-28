@@ -7,40 +7,67 @@ import reptile
 import layout
 import itertools
 
-def addProdQty(category, parent, sku, qty): 
-  if category.has_key(parent):
-    p = category[parent]
+# This is a function that adds product quantity. You can think of the 
+# products as a collection of regular, mini, or non sausage product gruops. 
+# It is how the code represents the regular or mini subsections in the pick list 
+# pdf.
+#
+# params: 
+#      category - this is of type dictionary where the key is a string like "RLQR" and the value 
+#             is an object of type ReptilProductQty (reptile.py)
+#      parent - parent sku string e.g. "RLQR"
+#      sku - the full product sku e.g. "RLQR25"
+#      qty - the qty integer to add
+def addProdQty(products, parent_sku, sku, qty): 
+  # if the products dictionary contains an existing ReptilProductQty value with the 
+  # parent_sku add the qty to that existing value 
+  if products.has_key(parent_sku):
+    p = products[parent]
     p.addProductQty(sku, qty)
-    category[parent] = p 
+    products[parent] = p 
   else: 
-    category[parent] = reptile.ReptilProductQty(sku, qty)
+    products[parent] = reptile.ReptilProductQty(sku, qty)
 
+  return products
+
+################################################################################################
+# Main script stuff follows here. You may execute this script from the command line (terminal app of OSX).
+# terminal command: "python /path/to/picklist_gen.py /path/to/csv"
+#
+# This stuff is within scope of this script
+
+# an array of address strings that are considered 2 day shipping
 two_day_addresses = []
+# west coast addresses
 west_coast_addresses = []
+# keeps all order numbers e.g. RL2019
+# this array is used to report the order number range in the top left of the pick list pdf
 order_nums = []
 
+# ice total
 ice_total = 0
-sku_index = 0
-qty_index = 0
-option_index = 0
-custom_index = 0
-addres_index = 0
-name_index = 0
-order_num_index = 0
-order_num_min = 0
-order_num_max = 0
 order_qty = {}
+non_link_qty = {}
 
+# you can think of these as hashmaps where the key to each of these collections
+# is a parent sku: e.g. RLQR and the value is an ReptilProductQty object (reptile.py file)
+# Refer to the addProdQty function above in that these variables will be the first 
+# parameter to that function. Each of these collections will correlate to the mini, regular, etc
+# sections in the generated pick list pdf output.
 regular_products = {}
 mini_products = {}
 non_sausage = {}
 
-non_link_qty = {}
+# a array of label strings. This data is used to generate the labels.
 labels = []
+
+# used to report that a sku from the csv was not recognized
 sku_product_not_found = []
 
-# this line will parse the products csv file and return 
-# a dictionary with sku: label_description 
+
+# this line will parse the products master csv file and return 
+# a dictionary with sku string -> product description 
+# refer to the products_export.csv that you exported from ship station
 products = reptile.ParseProductsFile("products_export.csv")
 
 # ship station csv file required as command line argument
@@ -50,6 +77,16 @@ f = open(sscsv)
 # find column numbers with the following headers 
 ship_station_iter = iter(csv.reader(f))
 headers = next(ship_station_iter)
+# these variables are used to reference the column numbers with the csv file
+sku_index = 0
+qty_index = 0
+option_index = 0
+custom_index = 0
+addres_index = 0
+name_index = 0
+order_num_index = 0
+order_num_min = 0
+order_num_max = 0
 # assign indices of columns based upon headers
 for col, header in enumerate(headers):
   if header == "Order - Number":
@@ -67,19 +104,34 @@ for col, header in enumerate(headers):
   if header == "Item - Name":
     name_index = col
 
+
+# this is the start of the loop that will go over
+# each row in the ship station csv file
 while True: 
+  # assign row as the next row in the csv file
   row = next(ship_station_iter, False)
+  # if there are no more rows to process in the ship station csv
+  # we exit this loop
   if not row:
     break
 
+  # grab the sku at row[sku_index]
   sku = row[sku_index]
+  # grab the order number at row[order_num_index]
   order_num = row[order_num_index]
   qty = int(row[qty_index])
+  # options column
   options = row[option_index]
+  # custom column
   custom = row[custom_index]
+  # customer address
   address = row[address_index]
+  # the item name
   item_name = row[name_index]
+  # the description
   desc = products[sku] if products.has_key(sku) else ""
+
+  # extract the parent sku from the sku: e.g parent is RLQR from sku RLQR25
   parent = reptile.ExtractParentSku(sku)
 
   # keep track of the min/max order numbers so we can report
@@ -114,15 +166,23 @@ while True:
   # those items appear as a unique product.  
   plus_egg = False
   mix_eggs = "Mix in 1-dozen quail eggs" 
+
+  # if the special code is in the options column or the mix_eggs string is in the item name
+  # column add +egg to the sku
   if "1350249218131" in options or mix_eggs in item_name:
     sku = sku+"+egg"
     desc = desc +" +egg"
     plus_egg = True
   else: 
-    # NOTE: if the number is missing we need to process the following rows
+    # we did not find any of the above in the current row so let's process the additional
+    # rows to determine if we have an egg order.
+
+    # loop rows
     while True:
+      # next row
       next_row = next(ship_station_iter, False)
       if not next_row:
+        # no more rows in csv file we break the this loop
         break
       elif next_row[order_num_index] != order_num:
         # reprocess this row when the order number changes
@@ -133,6 +193,7 @@ while True:
         ship_station_iter = itertools.chain([next_row], ship_station_iter)
         break
       elif mix_eggs in next_row[name_index]:
+        # if mix_eggs string is in next row name index we have an egg order
         sku = sku+"+egg"
         desc = desc +" +egg"
         plus_egg = True
@@ -141,28 +202,35 @@ while True:
   # Picklist Data:
   # mini orders have mini or micro in item name
   if "Mini" in item_name or "Micro" in item_name:
-    addProdQty(mini_products, parent, sku, qty)
+    mini_products = addProdQty(mini_products, parent, sku, qty)
   # non sausage orders 
   elif "links" not in item_name and "RLTEGU" not in sku and "RLMULTR-01" not in sku:
-    addProdQty(non_sausage, parent, sku, qty)
+    non_sausage = addProdQty(non_sausage, parent, sku, qty)
   # all link orders
   else:  
-    addProdQty(regular_products, parent, sku, qty)
+    regular_products = addProdQty(regular_products, parent, sku, qty)
 
   # Labels Data:
   if "RLTEGU" in sku:
     # if RLTEGU bundle is found 
+    # refer to TeguBundle function in the reptile.py file 
     reptile.TeguBundle(qty, plus_egg, regular_products, labels)
 
   elif "RLMULTR-01" in sku:
+    # RabbitBundle is defined in the reptile.py file 
     reptile.RabbitBundle(qty, plus_egg, labels)
 
   elif "Mini" in item_name or "Micro" in item_name or "links" in item_name:
+    # cross reference the sku with the products master list
     if not products.has_key(sku.replace("+egg", "")):
+      # if this sku was not found in the master list report it as
+      # a sku not found
       sku_product_not_found.append(sku)
     else:
+      # MiniMicro is defined in the reptile.py file 
       reptile.MiniMicro(qty, desc, labels)
-  
+# 
+#  END loop here so we close the csv file  
 f.close()
 
 
@@ -171,9 +239,12 @@ f.close()
 # Pick list to pdf file here 
 ############################################
 now = datetime.datetime.now()
+# title is generated with today's date time
 picks_file = "reptilinks-picks-" + now.strftime("%Y-%m-%d %H%M%S") + ".pdf"
 title = "Orders: " + str(order_num_min) + " - " + str(order_num_max)
 
+# refer to https://pyfpdf.readthedocs.io/en/latest docs  
+# for more information on how to use their libary to format a pdf
 pdf = FPDF(format = "Letter")
 pdf.add_page()
 pdf.set_font('Times', '', 8)
@@ -184,6 +255,8 @@ pdf.cell(70, 5, title, 0, 1)
 ############################################
 x = pdf.get_x()
 y = pdf.get_y()
+
+# refer to layout.py file for PrintCells function def 
 (xr, yr) = layout.PrintCells(pdf, "Regular", regular_products, x, y)
 
 ############################################
