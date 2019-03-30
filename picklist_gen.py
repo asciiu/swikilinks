@@ -9,7 +9,7 @@ import itertools
 
 ################################################################################################
 # Main script stuff follows here. You may execute this script from the command line (terminal app of OSX).
-# terminal command: "python /path/to/picklist_gen.py /path/to/csv"
+# terminal command: "python /path/to/picklist_gen.py /path/to/csv true"
 #
 # This stuff is within scope of this script
 
@@ -20,11 +20,11 @@ west_coast_addresses = []
 # keeps all order numbers e.g. RL2019
 # this array is used to report the order number range in the top left of the pick list pdf
 order_nums = []
+order_num_min = 0
+order_num_max = 0
 
 # ice total
 ice_total = 0
-order_qty = {}
-non_link_qty = {}
 
 # you can think of these as hashmaps where the key to each of these collections
 # is a parent sku: e.g. RLQR and the value is an ReptilProductQty object (reptile.py file)
@@ -51,19 +51,18 @@ products = reptile.ParseProductsFile("products_export.csv")
 sscsv = sys.argv[1]
 f = open(sscsv)
 
-# find column numbers with the following headers 
+# This chunk of code here assigns the column indices
+# for each header. 
 ship_station_iter = iter(csv.reader(f))
 headers = next(ship_station_iter)
 # these variables are used to reference the column numbers with the csv file
-sku_index = 0
+sku_index = 0      # this is the column number in the csv for sku
 qty_index = 0
 option_index = 0
 custom_index = 0
 addres_index = 0
 name_index = 0
 order_num_index = 0
-order_num_min = 0
-order_num_max = 0
 # assign indices of columns based upon headers
 for col, header in enumerate(headers):
   if header == "Order - Number":
