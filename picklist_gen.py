@@ -13,10 +13,12 @@ import itertools
 #
 # This stuff is within scope of this script
 
-# an array of address strings that are considered 2 day shipping
+# an array of address strings
+one_day_addresses = []
 two_day_addresses = []
-# west coast addresses
-west_coast_addresses = []
+three_day_addresses = []
+four_day_addresses = []
+
 # keeps all order numbers e.g. RL2019
 # this array is used to report the order number range in the top left of the pick list pdf
 order_nums = []
@@ -118,12 +120,12 @@ while True:
   if order_num_max == 0 or order_num_max < order_num:
     order_num_max = order_num
 
-  if address not in west_coast_addresses and "West" in custom:
-    # count unique addresses that are west coast orders
-    west_coast_addresses.append(address)
-  elif address not in two_day_addresses and "West" not in custom:
-    # count unique 2 day addresses that don't have "West" in the custom field
-    two_day_addresses.append(address)
+  #if address not in west_coast_addresses and "West" in custom:
+  #  # count unique addresses that are west coast orders
+  #  west_coast_addresses.append(address)
+  #elif address not in two_day_addresses and "West" not in custom:
+  #  # count unique 2 day addresses that don't have "West" in the custom field
+  #  two_day_addresses.append(address)
 
   # skip no sku rows
   if sku == "": 
@@ -133,10 +135,18 @@ while True:
   if order_num not in order_nums:
     order_nums.append(order_num)
     # increment dry ice total 
-    if "West" in custom:
-      ice_total += 40
-    else:
+    if "ONE DAY" in custom:
+      ice_total += 10
+      one_day_addresses.append(address)
+    elif "TWO DAY" in custom:
       ice_total += 20
+      two_day_addresses.append(address)
+    elif "THREE DAY" in custom:
+      ice_total += 30
+      three_day_addresses.append(address)
+    elif "FOUR DAY" in custom:
+      ice_total += 40
+      four_day_addresses.append(address)
 
   # Find the orders that have egg added, and modify the SKU number so that
   # those items appear as a unique product.  
@@ -257,21 +267,29 @@ timestamp = "Date: " + now.strftime("%Y-%m-%d %H:%M:%S")
 pdf.cell(70, 5, timestamp, 0, 1) 
 
 pdf.set_xy(xn, y)
-pdf.cell(50, 5, "West coast orders", 1, 0)
-pdf.cell(10, 5, str(len(west_coast_addresses)), 1, 0, 'R')
+pdf.cell(50, 5, "One day orders", 1, 0)
+pdf.cell(10, 5, str(len(one_day_addresses)), 1, 0, 'R')
 
 pdf.set_xy(xn, y+5)
-pdf.cell(50, 5, "2 day orders", 1, 0)
+pdf.cell(50, 5, "Two day orders", 1, 0)
 pdf.cell(10, 5, str(len(two_day_addresses)), 1, 0, 'R')
 
 pdf.set_xy(xn, y+10)
-pdf.cell(50, 5, "Ice total", 1, 0)
+pdf.cell(50, 5, "Three day orders", 1, 0)
+pdf.cell(10, 5, str(len(three_day_addresses)), 1, 0, 'R')
+
+pdf.set_xy(xn, y+15)
+pdf.cell(50, 5, "Four day orders", 1, 0)
+pdf.cell(10, 5, str(len(four_day_addresses)), 1, 0, 'R')
+
+pdf.set_xy(xn, y+20)
+pdf.cell(50, 5, "Ice total lbs", 1, 0)
 pdf.cell(10, 5, str(ice_total), 1, 0, 'R')
 
-ye = y+15
-pdf.set_xy(xn, y+15)
+ye = y+5
+pdf.set_xy(xn, y+25)
 pdf.cell(50, 5, "Skus not found:", 0, 1)
-ye += 5
+ye += 25 
 for sku in sku_product_not_found:
   pdf.set_xy(xn+5, ye)
   pdf.cell(10, 5, sku, 0, 0)
