@@ -190,7 +190,7 @@ while True:
   if "Mini" in item_name or "Micro" in item_name:
     mini_products = reptile.AddProdQty(mini_products, parent, sku, qty)
   # non sausage orders 
-  elif "links" not in item_name and "RLTEGU" not in sku and "RLMULTR-01" not in sku:
+  elif "links" not in item_name and "RLTEGU" not in sku and "RLMULTIR-01" not in sku:
     non_sausage = reptile.AddProdQty(non_sausage, parent, sku, qty)
   # all link orders
   else:  
