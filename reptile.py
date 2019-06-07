@@ -124,13 +124,13 @@ def AddProdQty(products, parent_sku, sku, qty):
 
 def RabbitBundle(qty, plus_egg, labels):
   multipack = [
-    "sku: RLMULTR-01\nRabbit Multipack: 8-12g (10/10 links)",
-    "sku: RLMULTR-01\nRabbit Multipack: 16-20g (5/5 links)",
-    "sku: RLMULTR-01\nRabbit Multipack: 25g (5/5 links)",
-    "sku: RLMULTR-01\nRabbit Multipack: 50g short (4/4 links)",
-    "sku: RLMULTR-01\nRabbit Multipack: 50g long  (4/4 links)",
-    "sku: RLMULTR-01\nRabbit Multipack: 75g (3/3 links)",
-    "sku: RLMULTR-01\nRabbit Multipack: 100g (2/2 links)"
+    "sku: RLMULTIR-01\nRabbit Multipack: 8-12g (10/10 links)",
+    "sku: RLMULTIR-01\nRabbit Multipack: 16-20g (5/5 links)",
+    "sku: RLMULTIR-01\nRabbit Multipack: 25g (5/5 links)",
+    "sku: RLMULTIR-01\nRabbit Multipack: 50g short (4/4 links)",
+    "sku: RLMULTIR-01\nRabbit Multipack: 50g long  (4/4 links)",
+    "sku: RLMULTIR-01\nRabbit Multipack: 75g (3/3 links)",
+    "sku: RLMULTIR-01\nRabbit Multipack: 100g (2/2 links)"
   ]
 
   if plus_egg:
