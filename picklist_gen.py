@@ -202,7 +202,7 @@ while True:
     # refer to TeguBundle function in the reptile.py file 
     reptile.TeguBundle(qty, plus_egg, regular_products, labels)
 
-  elif "RLMULTR-01" in sku:
+  elif "RLMULTIR-01" in sku:
     # RabbitBundle is defined in the reptile.py file 
     reptile.RabbitBundle(qty, plus_egg, labels)
 
