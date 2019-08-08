@@ -243,17 +243,17 @@ x = pdf.get_x()
 y = pdf.get_y()
 
 # refer to layout.py file for PrintCells function def 
-(xr, yr) = layout.PrintCells(pdf, "Regular", regular_products, x, y)
+(xr, yr) = layout.PrintCells(pdf, "Regular", regular_products, x, y, y)
 
 ############################################
 # Mini
 ############################################
-(xm, ym) = layout.PrintCells(pdf, "Mini", mini_products, xr, yr)
+(xm, ym) = layout.PrintCells(pdf, "Mini", mini_products, xr, yr, y)
 
 ############################################
 # Non link
 ############################################
-(xn, yn) = layout.PrintCells(pdf, "Non-link", non_sausage, xr, ym)
+(xn, yn) = layout.PrintCells(pdf, "Non-link", non_sausage, xr, ym, y)
 
 ############################################
 # Summary

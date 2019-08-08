@@ -1,4 +1,4 @@
-def PrintCells(fpdf, title, prds, x, y):
+def PrintCells(fpdf, title, prds, x, y, yo):
   # Sort the dictionary of skus in order_qty
   sorted_skus = sorted(prds)
 
@@ -20,7 +20,7 @@ def PrintCells(fpdf, title, prds, x, y):
   
     # begin new column
     if cy > 220:
-      cy = y 
+      cy = yo 
       cx += 70
 
     # print the parent sku
