@@ -19,7 +19,7 @@ def PrintCells(fpdf, title, prds, x, y, yo):
     sub_products = rl.subProducts()
   
     # begin new column
-    if cy > 220:
+    if cy > 200:
       cy = yo 
       cx += 70
 
