@@ -253,7 +253,7 @@ y = pdf.get_y()
 ############################################
 # Non link
 ############################################
-(xn, yn) = layout.PrintCells(pdf, "Non-link", non_sausage, xr, ym, y)
+(xn, yn) = layout.PrintCells(pdf, "Non-link", non_sausage, xm, ym, y)
 
 ############################################
 # Summary
@@ -261,33 +261,34 @@ y = pdf.get_y()
 # if not 3rd column set summary to 3rd column
 if xn < 150:
   xn += 70
+  yn = y
 
 pdf.set_xy(xn, y-5)
 timestamp = "Date: " + now.strftime("%Y-%m-%d %H:%M:%S")
 pdf.cell(70, 5, timestamp, 0, 1) 
 
-pdf.set_xy(xn, y)
+pdf.set_xy(xn, yn)
 pdf.cell(50, 5, "One day orders", 1, 0)
 pdf.cell(10, 5, str(len(one_day_addresses)), 1, 0, 'R')
 
-pdf.set_xy(xn, y+5)
+pdf.set_xy(xn, yn+5)
 pdf.cell(50, 5, "Two day orders", 1, 0)
 pdf.cell(10, 5, str(len(two_day_addresses)), 1, 0, 'R')
 
-pdf.set_xy(xn, y+10)
+pdf.set_xy(xn, yn+10)
 pdf.cell(50, 5, "Three day orders", 1, 0)
 pdf.cell(10, 5, str(len(three_day_addresses)), 1, 0, 'R')
 
-pdf.set_xy(xn, y+15)
+pdf.set_xy(xn, yn+15)
 pdf.cell(50, 5, "Four day orders", 1, 0)
 pdf.cell(10, 5, str(len(four_day_addresses)), 1, 0, 'R')
 
-pdf.set_xy(xn, y+20)
+pdf.set_xy(xn, yn+20)
 pdf.cell(50, 5, "Ice total lbs", 1, 0)
 pdf.cell(10, 5, str(ice_total), 1, 0, 'R')
 
-ye = y+5
-pdf.set_xy(xn, y+25)
+ye = yn+5
+pdf.set_xy(xn, yn+25)
 pdf.cell(50, 5, "Skus not found:", 0, 1)
 ye += 25 
 for sku in sku_product_not_found:
