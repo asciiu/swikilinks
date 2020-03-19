@@ -89,7 +89,7 @@ class ReptilProductQty:
        return
 
      total = qty
-     if self.product_qty.has_key(sku):
+     if sku in self.product_qty:
        total = self.product_qty[sku] + qty
 
      self.product_qty[sku] = total
@@ -112,7 +112,7 @@ class ReptilProductQty:
 def AddProdQty(products, parent_sku, sku, qty): 
   # if the products dictionary contains an existing ReptilProductQty value with the 
   # parent_sku add the qty to that existing value 
-  if products.has_key(parent_sku):
+  if sku in products:
     p = products[parent_sku]
     p.addProductQty(sku, qty)
     products[parent_sku] = p 
@@ -151,7 +151,7 @@ def TeguBundle(qty, plus_egg, regular_products, labels):
     asku = asku + "+egg"
     desc = desc + " +egg"
 
-  if regular_products.has_key(parent):
+  if parent in regular_products:
     p = regular_products[parent]
     p.addProductQty(asku, qty)
     regular_products[parent] = p 

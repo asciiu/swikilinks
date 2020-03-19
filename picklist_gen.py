@@ -107,7 +107,7 @@ while True:
   # the item name
   item_name = row[name_index]
   # the description
-  desc = products[sku] if products.has_key(sku) else ""
+  desc = products[sku] if sku in products else ""
 
   # extract the parent sku from the sku: e.g parent is RLQR from sku RLQR25
   parent = reptile.ExtractParentSku(sku)
@@ -208,7 +208,7 @@ while True:
 
   elif "Mini" in item_name or "Micro" in item_name or "links" in item_name:
     # cross reference the sku with the products master list
-    if not products.has_key(sku.replace("+egg", "")):
+    if not sku.replace("+egg", "") in products:
       # if this sku was not found in the master list report it as
       # a sku not found
       sku_product_not_found.append(sku)
