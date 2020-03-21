@@ -5,7 +5,7 @@ picklist_gen.py file. Refer to picklist_gen.py to see how the ship station csv i
 
 ### Prerequisites
 
-- python 2.7.x (comes preinstalled on all macs)
+- python 3.7.7 
 - install python pip using "sudo easy_install pip"
 - install python py2app using "pip install py2app"
 - install python pyfpdf using "pip install fpdf==1.7"

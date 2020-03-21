@@ -1,5 +1,6 @@
 import csv
 import re
+from easygui import msgbox
 
 # parses the products export csv from shopify
 # returns a dictionary of sku: label description.
@@ -10,40 +11,34 @@ import re
 # 'RLIG8': 'sku: RLIG8\nIguana Meat: 8-12 g (40 links)', 
 # 'RLWM3': 'sku: RLWM3\nWhite Mice: Fuzzies (3-5g each, 50 per bag)', 
 # 'RLNR175': 'sku: RLNR175\nNorway Hooded Rats: Large (175-274g each, 7 per bag)'} 
-def ParseProductsFile(file):
-    f = open(file)
-    csv_file = csv.reader(f)
+def ParseProductsFile(filename):
+    with open(filename, newline='') as csvfile:
+        product_reader = csv.reader(csvfile, delimiter=',', quotechar='"')
+        sku_index = 0
+        desc_index = 0
+        title_index = 0
+        title = ""
+        products = {}
 
-    sku_index = 0
-    desc_index = 0
-    title_index = 0
-    title = ""
-    products = {}
+        # read headers from first row
+        headers = next(product_reader)
+        for j, header in enumerate(headers):
+          if header == "Variant SKU":
+            sku_index = j
+          if header == "Option1 Value":
+            desc_index = j
+          if header == "Title":
+            title_index = j
 
-    for i, val in enumerate(csv_file):
-        # first row should be headers
-        if i == 0:
-            # assign indices of columns based upon headers
-            for j, header in enumerate(val):
-              if header == "Variant SKU":
-                sku_index = j
-              if header == "Option1 Value":
-                desc_index = j
-              if header == "Title":
-                title_index = j
-             # skip outer loop once since the first row are headers
-        else:
-          # if the title is empty in title cell then use the last title
-          title = title if val[title_index] == "" else val[title_index]
+        for row in product_reader:
+            # if the title is empty in title cell then use the last title
+            title = title if row[title_index] == "" else row[title_index]
+            sku = row[sku_index]
+            desc = row[desc_index]
+            product = f"sku: {sku}\n{title}: {desc}"
+            products[sku] = product
 
-          sku = val[sku_index]
-          desc = val[desc_index]
-
-          product = "sku: " + sku + "\n" + title + ": " + desc
-          products[sku] = product
-
-    f.close()
-    return products
+        return products
 
 # extracts the product from the sku
 # e.g. RLMBFV extracted from RLMBFV8

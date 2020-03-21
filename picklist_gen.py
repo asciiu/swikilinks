@@ -6,6 +6,7 @@ import datetime
 import reptile 
 import layout
 import itertools
+from easygui import msgbox
 
 ################################################################################################
 # Main script stuff follows here. You may execute this script from the command line (terminal app of OSX).
@@ -42,7 +43,6 @@ labels = []
 
 # used to report that a sku from the csv was not recognized
 sku_product_not_found = []
-
 
 # this line will parse the products master csv file and return 
 # a dictionary with sku string -> product description 
