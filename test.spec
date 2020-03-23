@@ -3,10 +3,10 @@
 block_cipher = None
 
 
-a = Analysis(['src/hello.py'],
+a = Analysis(['src/test.py'],
              pathex=['/Users/bishop/Workspace/Python/swickiilinks'],
              binaries=[],
-             datas=[],
+             datas=[('assets/products_export.csv', 'assets')],
              hiddenimports=[],
              hookspath=[],
              runtime_hooks=[],
@@ -19,15 +19,19 @@ pyz = PYZ(a.pure, a.zipped_data,
              cipher=block_cipher)
 exe = EXE(pyz,
           a.scripts,
-          a.binaries,
-          a.zipfiles,
-          a.datas,
           [],
-          name='hello',
+          exclude_binaries=True,
+          name='test',
           debug=False,
           bootloader_ignore_signals=False,
           strip=False,
           upx=True,
-          upx_exclude=[],
-          runtime_tmpdir=None,
           console=True )
+coll = COLLECT(exe,
+               a.binaries,
+               a.zipfiles,
+               a.datas,
+               strip=False,
+               upx=True,
+               upx_exclude=[],
+               name='test')
