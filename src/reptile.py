@@ -1,6 +1,13 @@
 import csv
+import os
 import re
-from easygui import msgbox
+import sys
+import codecs
+
+def ResourcePath(relative_path):
+    """ Get absolute path to resource, works for dev and for PyInstaller """
+    base_path = getattr(sys, '_MEIPASS', os.path.dirname(os.path.abspath(__file__)))
+    return os.path.join(base_path, relative_path)
 
 # parses the products export csv from shopify
 # returns a dictionary of sku: label description.
@@ -12,7 +19,8 @@ from easygui import msgbox
 # 'RLWM3': 'sku: RLWM3\nWhite Mice: Fuzzies (3-5g each, 50 per bag)', 
 # 'RLNR175': 'sku: RLNR175\nNorway Hooded Rats: Large (175-274g each, 7 per bag)'} 
 def ParseProductsFile(filename):
-    with open(filename, newline='') as csvfile:
+    with codecs.open(filename, encoding="utf-8") as csvfile:
+    #with open(filename, newline='') as csvfile:
         product_reader = csv.reader(csvfile, delimiter=',', quotechar='"')
         sku_index = 0
         desc_index = 0

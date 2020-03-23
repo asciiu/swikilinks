@@ -7,21 +7,22 @@ Usage:
 
 from setuptools import setup
 
-Plist = dict(CFBundleDocumentTypes=[dict(CFBundleTypeExtensions=["csv"],
+plist = dict(CFBundleDocumentTypes=[dict(CFBundleTypeExtensions=["csv"],
                                          CFBundleTypeName="CSV Document",
                                          CFBundleTypeRole="Viewer"),
                                     ]
              )
-APP = ['picklist_gen.py']
-DATA_FILES = ['products_export.csv', 'reptilinks.png']
-OPTIONS = {'argv_emulation': True,
-           'plist': Plist,
-           'iconfile':'hotdog.icns',
-           }
+
+options = {
+           'argv_emulation': True,
+           'plist': plist,
+           'iconfile':'assets/hotdog.icns',
+          }
 
 setup(
-    app=APP,
-    data_files=DATA_FILES,
-    options={'py2app': OPTIONS},
+    py_modules=[],
+    app=['src/picklist_gen.py'],
+    data_files=['assets/products_export.csv'],
+    options={'py2app': options},
     setup_requires=['py2app'],
 )

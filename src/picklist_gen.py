@@ -6,13 +6,17 @@ import datetime
 import reptile 
 import layout
 import itertools
-from easygui import msgbox
+import codecs
 
 ################################################################################################
 # Main script stuff follows here. You may execute this script from the command line (terminal app of OSX).
 # terminal command: "python /path/to/picklist_gen.py /path/to/csv true"
 #
 # This stuff is within scope of this script
+#import sys
+#def __main__():
+    #with open("parameters.log", "ab") as f:
+        #f.write(str(sys.argv))
 
 # an array of address strings
 one_day_addresses = []
@@ -48,10 +52,12 @@ sku_product_not_found = []
 # a dictionary with sku string -> product description 
 # refer to the products_export.csv that you exported from ship station
 products = reptile.ParseProductsFile("products_export.csv")
+#products = reptile.ParseProductsFile("assets/products_export.csv")
 
 # ship station csv file required as command line argument
 sscsv = sys.argv[1]
-f = open(sscsv)
+#f = open(sscsv)
+f = codecs.open(sscsv, encoding="utf-8")
 
 # This chunk of code here assigns the column indices
 # for each header. 

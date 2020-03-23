@@ -23,6 +23,15 @@ in the same directory.
 ```
 $ cd /path/to/swickilinks
 $ python setup.py py2app 
+
+$ pyinstaller --icon=assets/hotdog.icns --onefile --windowed --osx-bundle-identifier=com.reptilinks.picklistgen src/picklist_gen.py 
+$ pyinstaller --onefile picklist_gen.spec
+$ pyinstaller --onedir picklist_gen.spec
+```
+
+generating the spec file from scratch:
+```
+$ pyi-makespec --icon=assets/hotdog.icns --onefile --windowed --osx-bundle-identifier=com.reptilinks.picklistgen src/picklist_gen.py
 ```
 
 This will create the app under the dist folder.
