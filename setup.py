@@ -25,4 +25,5 @@ setup(
     data_files=['assets/products_export.csv'],
     options={'py2app': options},
     setup_requires=['py2app'],
+    version='0.3.0',
 )
