@@ -58,6 +58,10 @@ def ExtractParentSku(sku):
   # if RL5050 return RL5050
   if sku.startswith("RL5050"):
     return "RL5050" 
+  
+  # return sku RL25/25/50
+  if sku.startswith("RL25/25/50"):
+    return "RL25/25/50"
 
   # if sku ends with MICRO return the first part only
   if sku.endswith("MICRO"):
