@@ -119,10 +119,10 @@ class ReptilProductQty:
 def AddProdQty(products, parent_sku, sku, qty): 
   # if the products dictionary contains an existing ReptilProductQty value with the 
   # parent_sku add the qty to that existing value 
-  if sku in products:
+  if parent_sku in products:
     p = products[parent_sku]
     p.addProductQty(sku, qty)
-    products[parent_sku] = p 
+    #products[parent_sku] = p 
   else: 
     products[parent_sku] = ReptilProductQty(sku, qty)
 

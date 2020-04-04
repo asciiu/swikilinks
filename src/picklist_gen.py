@@ -51,7 +51,7 @@ sku_product_not_found = []
 # this line will parse the products master csv file and return 
 # a dictionary with sku string -> product description 
 # refer to the products_export.csv that you exported from ship station
-products = reptile.ParseProductsFile("products_export.csv")
+products = reptile.ParseProductsFile("assets/products_export.csv")
 #products = reptile.ParseProductsFile("assets/products_export.csv")
 
 # ship station csv file required as command line argument
@@ -88,139 +88,137 @@ for col, header in enumerate(headers):
   if header == "Item - Name":
     name_index = col
 
-
 # this is the start of the loop that will go over
 # each row in the ship station csv file
 while True: 
-  # assign row as the next row in the csv file
-  row = next(ship_station_iter, False)
-  # if there are no more rows to process in the ship station csv
-  # we exit this loop
-  if not row:
+  try:
+    # assign row as the next row in the csv file
+    row = next(ship_station_iter)
+    # grab the sku at row[sku_index]
+    sku = row[sku_index]
+    # grab the order number at row[order_num_index]
+    order_num = row[order_num_index]
+    qty = int(row[qty_index])
+    # options column
+    options = row[option_index]
+    # custom column
+    custom = row[custom_index]
+    # customer address
+    address = row[address_index]
+    # the item name
+    item_name = row[name_index]
+    # the description
+    desc = products[sku] if sku in products else ""
+
+    # extract the parent sku from the sku: e.g parent is RLQR from sku RLQR25
+    parent = reptile.ExtractParentSku(sku)
+
+    # keep track of the min/max order numbers so we can report
+    # the order numbers at the top page of the pick list
+    # i.e: "Orders: RL2586 - RL2617"
+    if order_num_min == 0 or order_num_min > order_num:
+      order_num_min = order_num 
+    if order_num_max == 0 or order_num_max < order_num:
+      order_num_max = order_num
+
+    #if address not in west_coast_addresses and "West" in custom:
+    #  # count unique addresses that are west coast orders
+    #  west_coast_addresses.append(address)
+    #elif address not in two_day_addresses and "West" not in custom:
+    #  # count unique 2 day addresses that don't have "West" in the custom field
+    #  two_day_addresses.append(address)
+
+    # skip no sku rows
+    if sku == "": 
+      continue
+
+    # this a new order number?
+    if order_num not in order_nums:
+      order_nums.append(order_num)
+      # increment dry ice total 
+      if "ONE DAY" in custom:
+        ice_total += 10
+        one_day_addresses.append(address)
+      elif "TWO DAY" in custom:
+        ice_total += 20
+        two_day_addresses.append(address)
+      elif "THREE DAY" in custom:
+        ice_total += 30
+        three_day_addresses.append(address)
+      elif "FOUR DAY" in custom:
+        ice_total += 40
+        four_day_addresses.append(address)
+
+    # Find the orders that have egg added, and modify the SKU number so that
+    # those items appear as a unique product.  
+    plus_egg = False
+    mix_eggs = "Mix in 1-dozen quail eggs" 
+
+    # if the special code is in the options column or the mix_eggs string is in the item name
+    # column add +egg to the sku
+    if "1350249218131" in options or mix_eggs in item_name:
+      sku = sku+"+egg"
+      desc = desc +" +egg"
+      plus_egg = True
+    else: 
+      # we did not find any of the above in the current row so let's process the additional
+      # rows to determine if we have an egg order.
+
+      # loop rows
+      stop = False
+      while not stop:
+        # next row
+        next_row = next(ship_station_iter)
+
+        if next_row[order_num_index] != order_num:
+          # reprocess this row when the order number changes
+          ship_station_iter = itertools.chain([next_row], ship_station_iter)
+          stop = True
+        elif next_row[sku_index] != "" and next_row[sku_index] != sku:
+          # reprocess this row the sku number changes
+          ship_station_iter = itertools.chain([next_row], ship_station_iter)
+          stop = True
+        elif mix_eggs in next_row[name_index]:
+          # if mix_eggs string is in next row name index we have an egg order
+          sku = sku+"+egg"
+          desc = desc +" +egg"
+          plus_egg = True
+          stop = True
+
+    # Picklist Data:
+    # mini orders have mini or micro in item name
+    if "Mini" in item_name or "Micro" in item_name:
+      mini_products = reptile.AddProdQty(mini_products, parent, sku, qty)
+    # non sausage orders 
+    elif "links" not in item_name and "RLTEGU" not in sku and "RLMULTIR-01" not in sku:
+      non_sausage = reptile.AddProdQty(non_sausage, parent, sku, qty)
+    # all link orders
+    else:  
+      regular_products = reptile.AddProdQty(regular_products, parent, sku, qty)
+
+    # Labels Data:
+    if "RLTEGU" in sku:
+      # if RLTEGU bundle is found 
+      # refer to TeguBundle function in the reptile.py file 
+      reptile.TeguBundle(qty, plus_egg, regular_products, labels)
+
+    elif "RLMULTIR-01" in sku:
+      # RabbitBundle is defined in the reptile.py file 
+      reptile.RabbitBundle(qty, plus_egg, labels)
+
+    elif "Mini" in item_name or "Micro" in item_name or "links" in item_name:
+      # cross reference the sku with the products master list
+      if not sku.replace("+egg", "") in products:
+        # if this sku was not found in the master list report it as
+        # a sku not found
+        sku_product_not_found.append(sku)
+      else:
+        # MiniMicro is defined in the reptile.py file 
+        reptile.MiniMicro(qty, desc, labels)
+
+  except StopIteration:
     break
 
-  # grab the sku at row[sku_index]
-  sku = row[sku_index]
-  # grab the order number at row[order_num_index]
-  order_num = row[order_num_index]
-  qty = int(row[qty_index])
-  # options column
-  options = row[option_index]
-  # custom column
-  custom = row[custom_index]
-  # customer address
-  address = row[address_index]
-  # the item name
-  item_name = row[name_index]
-  # the description
-  desc = products[sku] if sku in products else ""
-
-  # extract the parent sku from the sku: e.g parent is RLQR from sku RLQR25
-  parent = reptile.ExtractParentSku(sku)
-
-  # keep track of the min/max order numbers so we can report
-  # the order numbers at the top page of the pick list
-  # i.e: "Orders: RL2586 - RL2617"
-  if order_num_min == 0 or order_num_min > order_num:
-    order_num_min = order_num 
-  if order_num_max == 0 or order_num_max < order_num:
-    order_num_max = order_num
-
-  #if address not in west_coast_addresses and "West" in custom:
-  #  # count unique addresses that are west coast orders
-  #  west_coast_addresses.append(address)
-  #elif address not in two_day_addresses and "West" not in custom:
-  #  # count unique 2 day addresses that don't have "West" in the custom field
-  #  two_day_addresses.append(address)
-
-  # skip no sku rows
-  if sku == "": 
-    continue
-
-  # this a new order number?
-  if order_num not in order_nums:
-    order_nums.append(order_num)
-    # increment dry ice total 
-    if "ONE DAY" in custom:
-      ice_total += 10
-      one_day_addresses.append(address)
-    elif "TWO DAY" in custom:
-      ice_total += 20
-      two_day_addresses.append(address)
-    elif "THREE DAY" in custom:
-      ice_total += 30
-      three_day_addresses.append(address)
-    elif "FOUR DAY" in custom:
-      ice_total += 40
-      four_day_addresses.append(address)
-
-  # Find the orders that have egg added, and modify the SKU number so that
-  # those items appear as a unique product.  
-  plus_egg = False
-  mix_eggs = "Mix in 1-dozen quail eggs" 
-
-  # if the special code is in the options column or the mix_eggs string is in the item name
-  # column add +egg to the sku
-  if "1350249218131" in options or mix_eggs in item_name:
-    sku = sku+"+egg"
-    desc = desc +" +egg"
-    plus_egg = True
-  else: 
-    # we did not find any of the above in the current row so let's process the additional
-    # rows to determine if we have an egg order.
-
-    # loop rows
-    while True:
-      # next row
-      next_row = next(ship_station_iter, False)
-      if not next_row:
-        # no more rows in csv file we break the this loop
-        break
-      elif next_row[order_num_index] != order_num:
-        # reprocess this row when the order number changes
-        ship_station_iter = itertools.chain([next_row], ship_station_iter)
-        break
-      elif next_row[sku_index] != "" and next_row[sku_index] != sku:
-        # reprocess this row the sku number changes
-        ship_station_iter = itertools.chain([next_row], ship_station_iter)
-        break
-      elif mix_eggs in next_row[name_index]:
-        # if mix_eggs string is in next row name index we have an egg order
-        sku = sku+"+egg"
-        desc = desc +" +egg"
-        plus_egg = True
-        break
-
-  # Picklist Data:
-  # mini orders have mini or micro in item name
-  if "Mini" in item_name or "Micro" in item_name:
-    mini_products = reptile.AddProdQty(mini_products, parent, sku, qty)
-  # non sausage orders 
-  elif "links" not in item_name and "RLTEGU" not in sku and "RLMULTIR-01" not in sku:
-    non_sausage = reptile.AddProdQty(non_sausage, parent, sku, qty)
-  # all link orders
-  else:  
-    regular_products = reptile.AddProdQty(regular_products, parent, sku, qty)
-
-  # Labels Data:
-  if "RLTEGU" in sku:
-    # if RLTEGU bundle is found 
-    # refer to TeguBundle function in the reptile.py file 
-    reptile.TeguBundle(qty, plus_egg, regular_products, labels)
-
-  elif "RLMULTIR-01" in sku:
-    # RabbitBundle is defined in the reptile.py file 
-    reptile.RabbitBundle(qty, plus_egg, labels)
-
-  elif "Mini" in item_name or "Micro" in item_name or "links" in item_name:
-    # cross reference the sku with the products master list
-    if not sku.replace("+egg", "") in products:
-      # if this sku was not found in the master list report it as
-      # a sku not found
-      sku_product_not_found.append(sku)
-    else:
-      # MiniMicro is defined in the reptile.py file 
-      reptile.MiniMicro(qty, desc, labels)
 # 
 #  END loop here so we close the csv file  
 f.close()

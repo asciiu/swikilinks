@@ -22,8 +22,8 @@ options = {
 setup(
     py_modules=[],
     app=['src/picklist_gen.py'],
-    data_files=['assets/products_export.csv'],
+    data_files=[('assets', ['assets/products_export.csv'])],
     options={'py2app': options},
     setup_requires=['py2app'],
-    version='0.3.0',
+    version='0.3.1',
 )
