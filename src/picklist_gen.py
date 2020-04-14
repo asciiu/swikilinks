@@ -152,38 +152,14 @@ while True:
     # Find the orders that have egg added, and modify the SKU number so that
     # those items appear as a unique product.  
     plus_egg = False
-    mix_eggs = "Mix in 1-dozen quail eggs" 
+    mix_eggs = "ix in 1-dozen quail eggs" 
 
     # if the special code is in the options column or the mix_eggs string is in the item name
     # column add +egg to the sku
-    if "1350249218131" in options or mix_eggs in item_name:
+    if "1350249218131" in options or mix_eggs in item_name or mix_eggs in options:
       sku = sku+"+egg"
       desc = desc +" +egg"
       plus_egg = True
-    else: 
-      # we did not find any of the above in the current row so let's process the additional
-      # rows to determine if we have an egg order.
-
-      # loop rows
-      stop = False
-      while not stop:
-        # next row
-        next_row = next(ship_station_iter)
-
-        if next_row[order_num_index] != order_num:
-          # reprocess this row when the order number changes
-          ship_station_iter = itertools.chain([next_row], ship_station_iter)
-          stop = True
-        elif next_row[sku_index] != "" and next_row[sku_index] != sku:
-          # reprocess this row the sku number changes
-          ship_station_iter = itertools.chain([next_row], ship_station_iter)
-          stop = True
-        elif mix_eggs in next_row[name_index]:
-          # if mix_eggs string is in next row name index we have an egg order
-          sku = sku+"+egg"
-          desc = desc +" +egg"
-          plus_egg = True
-          stop = True
 
     # Picklist Data:
     # mini orders have mini or micro in item name
@@ -314,7 +290,7 @@ else:
 label_file = "reptilinks-labels-" + now.strftime("%Y-%m-%d %H%M%S") + ".pdf"
 #pdf = FPDF(format = "Letter")
 pdf = FPDF('P', 'in', (4, 0.5))
-pdf.set_font('Helvetica', '', 12)
+pdf.set_font('Helvetica', '', 10)
 pdf.set_margins(0, 0)
 pdf.set_auto_page_break(False)
 x = y = 0
