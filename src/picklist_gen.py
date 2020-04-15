@@ -152,11 +152,11 @@ while True:
     # Find the orders that have egg added, and modify the SKU number so that
     # those items appear as a unique product.  
     plus_egg = False
-    mix_eggs = "ix in 1-dozen quail eggs" 
+    mix_eggs = "Mix in 1-dozen quail eggs" 
 
     # if the special code is in the options column or the mix_eggs string is in the item name
     # column add +egg to the sku
-    if "1350249218131" in options or mix_eggs in item_name or mix_eggs in options:
+    if mix_eggs in options:
       sku = sku+"+egg"
       desc = desc +" +egg"
       plus_egg = True
