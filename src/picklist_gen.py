@@ -276,6 +276,25 @@ for sku in sku_product_not_found:
   pdf.cell(10, 5, sku, 0, 0)
   ye += 5
 
+
+############################################
+# New page for Order Numbers 
+############################################
+pdf.add_page()
+pdf.set_font('Times', '', 8)
+pdf.cell(70, 5, "Order Numbers:", 0, 1)
+
+x = pdf.get_x()
+y = pdf.get_y()
+
+for num in order_nums:
+  pdf.set_xy(x+5, y)
+  pdf.cell(10, 5, num, 0, 0)
+  y += 5
+  if y >= 255:
+    y = 15 
+    x += 30
+
 # if running via app
 if len(sys.argv) > 2:
   # if running file manually via command line
