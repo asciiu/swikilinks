@@ -54,6 +54,21 @@ sku_product_not_found = []
 products = reptile.ParseProductsFile("assets/products_export.csv")
 #products = reptile.ParseProductsFile("assets/products_export.csv")
 
+linkin_park = { 
+  "0.5-1 g (50 links)": 50,
+  "1-2 g (50 links)": 50,
+  "3 g (50 links)": 50,
+  "8-12 g (40 links)": 40,
+  "16-20 (24 links)": 24,
+  "25 g (20 links)": 20,
+  "50 g short  (10 links)": 10,
+  "50 g long  (10 links)": 10,
+  "75 g (7 links)": 7,
+  "100 g (6 links)": 6
+}
+
+link_counts = {}
+
 # ship station csv file required as command line argument
 sscsv = sys.argv[1]
 #f = open(sscsv)
@@ -109,6 +124,26 @@ while True:
     item_name = row[name_index]
     # the description
     desc = products[sku] if sku in products else ""
+
+    for link in linkin_park:
+      if link in desc:
+        # qty * link count
+        link_count = qty * linkin_park[link]
+        if link in link_counts:
+          link_counts[link] = link_counts[link] + link_count
+        else:
+          link_counts[link] = link_count
+
+    #if desc contains "0.5-1 g (50 links)":
+    #elif desc contains "1-2 g (50 links)":
+    #elif desc contains "3 g (50 links)":
+    #elif desc contains "8-12 g (40 links)":
+    #elif desc contains "16-20 (24 links)":
+    #elif desc contains "25 g (20 links)":
+    #elif desc contains "50 g short  (10 links)":
+    #elif desc contains "50 g long  (10 links)":
+    #elif desc contains "75 g (7 links)":
+    #elif desc contains "100 g (6 links)":
 
     # extract the parent sku from the sku: e.g parent is RLQR from sku RLQR25
     parent = reptile.ExtractParentSku(sku)
@@ -267,8 +302,15 @@ pdf.set_xy(xn, yn+20)
 pdf.cell(50, 5, "Ice total lbs", 1, 0)
 pdf.cell(10, 5, str(ice_total), 1, 0, 'R')
 
+yl = yn+20
+for link in link_counts:
+  yl += 5
+  pdf.set_xy(xn, yl)
+  pdf.cell(50, 5, link, 1, 0)
+  pdf.cell(10, 5, str(link_counts[link]), 1, 0, 'R')
+
 ye = yn+5
-pdf.set_xy(xn, yn+25)
+pdf.set_xy(xn, yl+5)
 pdf.cell(50, 5, "Skus not found:", 0, 1)
 ye += 25 
 for sku in sku_product_not_found:
