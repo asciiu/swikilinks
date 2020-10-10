@@ -412,12 +412,11 @@ else:
 # Shipping Addresses here 
 ############################################
 label_file = "reptilinks-shipping-" + now.strftime("%Y-%m-%d %H%M%S") + ".pdf"
-#pdf = FPDF(format = "Letter")
 pdf = FPDF('P', 'in', (4, 1.9))
 pdf.set_font('Helvetica', '', 10)
 pdf.set_margins(0, 0)
 pdf.set_auto_page_break(False)
-x = y = 0
+x = y = 0.05 
 
 for _, shipping_address in enumerate(addresses):
   pdf.add_page()
@@ -434,7 +433,7 @@ for _, shipping_address in enumerate(addresses):
   y+=0.60
   pdf.set_xy(x, y)
   
-  label = 'To: {}\n{}\n{}, {}, {}, {}\nPhone: {}'.format(
+  label = 'To: {}\n{}\n{}, {}, {} {}\nPhone: {}'.format(
     shipping_address.name, 
     shipping_address.address1, 
     shipping_address.city, 
@@ -444,7 +443,7 @@ for _, shipping_address in enumerate(addresses):
     shipping_address.phone)
 
   if shipping_address.address2 != "":
-    label = 'To: {}\n{}\n{}\n{}, {}, {}, {}\nPhone: {}'.format(
+    label = 'To: {}\n{}\n{}\n{}, {}, {} {}\nPhone: {}'.format(
       shipping_address.name, 
       shipping_address.address1, 
       shipping_address.address2, 
@@ -455,7 +454,7 @@ for _, shipping_address in enumerate(addresses):
       shipping_address.phone)
 
   pdf.multi_cell(4, 0.15, label, 0)
-  y = 0
+  y = 0.5
 
 if len(sys.argv) > 2:
   # if running via cli
