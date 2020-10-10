@@ -7,6 +7,7 @@ import reptile
 import layout
 import itertools
 import codecs
+import address
 
 ################################################################################################
 # Main script stuff follows here. You may execute this script from the command line (terminal app of OSX).
@@ -23,6 +24,7 @@ one_day_addresses = []
 two_day_addresses = []
 three_day_addresses = []
 four_day_addresses = []
+addresses = []
 
 # keeps all order numbers e.g. RL2019
 # this array is used to report the order number range in the top left of the pick list pdf
@@ -83,9 +85,18 @@ sku_index = 0      # this is the column number in the csv for sku
 qty_index = 0
 option_index = 0
 custom_index = 0
-addres_index = 0
 name_index = 0
 order_num_index = 0
+
+person_index = 0
+address_index = 0
+address2_index = 0
+city_index = 0
+state_index = 0
+postal_index = 0
+country_index = 0
+phone_index = 0
+
 # assign indices of columns based upon headers
 for col, header in enumerate(headers):
   if header == "Order - Number":
@@ -100,8 +111,23 @@ for col, header in enumerate(headers):
     custom_index = col
   if header == "Ship To - Address 1":
     address_index = col
+  if header == "Ship To - Address 2":
+    address2_index = col
   if header == "Item - Name":
     name_index = col
+  if header == "Ship To - Name":
+    person_index = col
+  if header == "Ship To - Postal Code":
+    postal_index = col
+  if header == "Ship To - City":
+    city_index = col
+  if header == "Ship To - Phone":
+    phone_index = col
+  if header == "Ship To - State":
+    state_index = col
+  if header == "Ship To - Country":
+    country_index = col
+
 
 # this is the start of the loop that will go over
 # each row in the ship station csv file
@@ -119,11 +145,14 @@ while True:
     # custom column
     custom = row[custom_index]
     # customer address
-    address = row[address_index]
+    address1 = row[address_index]
     # the item name
     item_name = row[name_index]
     # the description
     desc = products[sku] if sku in products else ""
+
+    # shipping address
+    le_address = address.Address(row[person_index], address1, row[address2_index], row[city_index], row[state_index], row[postal_index], row[country_index], row[phone_index])
 
     for link in linkin_park:
       if link in desc:
@@ -173,16 +202,18 @@ while True:
       # increment dry ice total 
       if "ONE DAY" in custom:
         ice_total += 10
-        one_day_addresses.append(address)
+        one_day_addresses.append(address1)
       elif "TWO DAY" in custom:
         ice_total += 20
-        two_day_addresses.append(address)
+        two_day_addresses.append(address1)
       elif "THREE DAY" in custom:
         ice_total += 30
-        three_day_addresses.append(address)
+        three_day_addresses.append(address1)
+        addresses.append(le_address)
       elif "FOUR DAY" in custom:
         ice_total += 40
-        four_day_addresses.append(address)
+        four_day_addresses.append(address1)
+        addresses.append(le_address)
 
     # Find the orders that have egg added, and modify the SKU number so that
     # those items appear as a unique product.  
@@ -369,6 +400,62 @@ for _, label in enumerate(labels):
   # 2019/01/23 avoid text rollover for label
   label = label.replace("+ Fruits and Veggies", "+ F & V")
   pdf.multi_cell(4, 0.15, label, 0)
+
+if len(sys.argv) > 2:
+  # if running via cli
+  pdf.output(label_file, 'F')
+else:
+  pdf.output("../../../"+label_file, 'F')
+
+
+############################################
+# Shipping Addresses here 
+############################################
+label_file = "reptilinks-shipping-" + now.strftime("%Y-%m-%d %H%M%S") + ".pdf"
+#pdf = FPDF(format = "Letter")
+pdf = FPDF('P', 'in', (4, 1.9))
+pdf.set_font('Helvetica', '', 10)
+pdf.set_margins(0, 0)
+pdf.set_auto_page_break(False)
+x = y = 0
+
+for _, shipping_address in enumerate(addresses):
+  pdf.add_page()
+  pdf.set_xy(x, y+0.03)
+
+  pdf.cell(4, 0.15, "DRY ICE UN1845", 0)
+  y+=0.20
+  pdf.set_xy(x, y)
+  pdf.cell(4, 0.15, "2.2 KG", 0)
+  y+=0.30
+  pdf.set_xy(x, y)
+  from_address = 'From: Nick Helble\n7738 STARKEY CLEVENGER RD\nBLANCHESTER, OH, 45107'
+  pdf.multi_cell(4, 0.15, from_address, 0)
+  y+=0.60
+  pdf.set_xy(x, y)
+  
+  label = 'To: {}\n{}\n{}, {}, {}, {}\nPhone: {}'.format(
+    shipping_address.name, 
+    shipping_address.address1, 
+    shipping_address.city, 
+    shipping_address.state, 
+    shipping_address.postal, 
+    shipping_address.country,
+    shipping_address.phone)
+
+  if shipping_address.address2 != "":
+    label = 'To: {}\n{}\n{}\n{}, {}, {}, {}\nPhone: {}'.format(
+      shipping_address.name, 
+      shipping_address.address1, 
+      shipping_address.address2, 
+      shipping_address.city, 
+      shipping_address.state, 
+      shipping_address.postal, 
+      shipping_address.country,
+      shipping_address.phone)
+
+  pdf.multi_cell(4, 0.15, label, 0)
+  y = 0
 
 if len(sys.argv) > 2:
   # if running via cli
