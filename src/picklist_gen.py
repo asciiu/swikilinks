@@ -412,25 +412,28 @@ else:
 # Shipping Addresses here 
 ############################################
 label_file = "reptilinks-shipping-" + now.strftime("%Y-%m-%d %H%M%S") + ".pdf"
-pdf = FPDF('P', 'in', (4, 1.9))
-pdf.set_font('Helvetica', '', 10)
+pdf = FPDF('P', 'in', (4, 6))
+pdf.set_font('Helvetica', '', 16)
 pdf.set_margins(0, 0)
 pdf.set_auto_page_break(False)
-x = y = 0.05 
+x = y = 0.33
 
 for _, shipping_address in enumerate(addresses):
   pdf.add_page()
   pdf.set_xy(x, y+0.03)
 
-  pdf.cell(4, 0.15, "DRY ICE UN1845", 0)
-  y+=0.20
+  pdf.set_font('Helvetica', '', 24)
+  pdf.cell(4, 0.2, "DRY ICE UN1845", 0)
+  y+=0.40
   pdf.set_xy(x, y)
   pdf.cell(4, 0.15, "2.2 KG", 0)
-  y+=0.30
+
+  pdf.set_font('Helvetica', '', 12)
+  y+=0.70
   pdf.set_xy(x, y)
   from_address = 'From: Nick Helble\n7738 STARKEY CLEVENGER RD\nBLANCHESTER, OH, 45107'
-  pdf.multi_cell(4, 0.15, from_address, 0)
-  y+=0.60
+  pdf.multi_cell(4, 0.33, from_address, 0)
+  y+=1.4
   pdf.set_xy(x, y)
   
   label = 'To: {}\n{}\n{}, {}, {} {}\nPhone: {}'.format(
@@ -453,7 +456,7 @@ for _, shipping_address in enumerate(addresses):
       shipping_address.country,
       shipping_address.phone)
 
-  pdf.multi_cell(4, 0.15, label, 0)
+  pdf.multi_cell(4, 0.33, label, 0)
   y = 0.5
 
 if len(sys.argv) > 2:
